@@ -146,6 +146,17 @@ public class Controller {
 				l.setTextFill(Color.GREEN);
 				view.OpenErrorStage(l);
 				view.bSort.setDisable(true);
+				
+				view.ins2.setVisible(false);
+				view.ins2.setManaged(false);
+				view.r1.setVisible(false);
+				view.r1.setManaged(false);
+				view.r2.setVisible(false);
+				view.r2.setManaged(false);
+				view.r3.setVisible(false);
+				view.r3.setManaged(false);
+				view.sortButton.setVisible(false);
+				view.sortButton.setManaged(false);
 				return;
 			});
 		});
