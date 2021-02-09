@@ -1,28 +1,48 @@
 package Model;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Map.Entry;
+import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
+
+import Controller.StoreController;
+import Momento.StoreProductsMomento;
+import interfaces.StoreModelListener;
+import interfaces.Store_Interface;
+import storeExceptions.UnableToRecoveryLastProductException;
 
 
-public class Store {
+public class Store implements Store_Interface {
+	public static final String F_NAME = "products txt";
 
-	Map <String,Product> productsMap;
+	
+	private Map <String,Product> productsMap; // the maps string is the product id;
+	private Set<StoreModelListener> allListener;
+	private Comparator<String> comparator;
+	private StoreProductsMomento productsMomento;
 	int numOfProducts;
-	int sortType; //1-ascending, 2-descending, 3-not sorted
-	private Comparator<Product> comparator;
+	SortType sortType; 
 	
 	public Store ()
 	{
 		numOfProducts=0;
 		productsMap= new LinkedHashMap<String, Product>();
-		sortType=3; //By default
+		allListener = new TreeSet<StoreModelListener>();
+		sortType = SortType.eIncome_Order; //By default
+		
 	}
 	
-	public int readProductsFromBinaryFile()
+	public int readProductsFromBinaryFile(String fileName)
 	{
 		/* Here you need to read from binary file with an Iterator on "products.dat" In the following order: 
 		 * Read Int - counter for number of products
@@ -34,68 +54,131 @@ public class Store {
 	}
 
 	public void addProduct(String key,Product p) {
-		productsMap.put(key, p);	
-		this.numOfProducts++;
 		/*
 		 * After adding each product, you have to re- write the binary file-
 		 * Updated number of products and all of the products that are inside the map.
 		 * Also everything has to happen with Command pattern
 		 */
+		productsMomento = new StoreProductsMomento(productsMap);
+		productsMap.put(key, p);	
+		this.numOfProducts++;
+		saveProductsToBinaryFile(F_NAME);
+		startIterationOnFile();
+
 	}
 	
-	public int removeLastProduct()
-	{
+	private void startIterationOnFile() {
+		
+//		class ConcreteIterator implements Iterator<Integer> {
+//			private int cur = 0; // the index of element that 'next' will return
+//			private int last = -1; // the index of the element to be removed
+//
+//			@Override
+//			public boolean hasNext() {
+//				return cur < productsMap.size();
+//			}
+//
+//			@Override
+//			public Integer next() {
+//				if (!hasNext())
+//					throw new NoSuchElementException();
+//				int tmp = a[cur];
+//				last = cur;
+//				cur++;
+//				return tmp;
+//			}
+//
+//			@Override
+//			public void remove() {
+//				if (last == -1)
+//					throw new IllegalStateException();
+//				for (int i = last; i < size - 1; i++)
+//					a[i] = a[i + 1];
+//				a = Arrays.copyOf(a, --size);
+//				cur = last;
+//				last = -1;
+//			}
+//
+//		}		
+	}
+
+	public int removeLastProduct() throws UnableToRecoveryLastProductException{
 		/*
 		 *  Allow by Memento pattern to cancel the operation of adding the last product.
 		 *  Remove it from both map and binary file.
 		 */
+		if(productsMomento== null)
+			throw new UnableToRecoveryLastProductException();
+		productsMap = productsMomento.getProductsMap();
+		productsMomento =null;
 		return 1;  // If product has been removed successfully
 	}
 	
-	public void updateMapType(int type)
+	public void updateMapType(SortType type)
 	{
 		this.sortType=type;
+		Map<String, Product> tempMap;
+		switch(this.sortType) {
 		
-		if(sortType==1) 
-		{
+		case eAscending_Order:
 			/*
 			 *  Create a comparator that sorts the products by ascending order, 
 			 *  set the comparator by "setComperator" function, and create a tree map with this comparator,
 			 *  Copy all the the products inside the current map, and update the map.
 			 *  Update the file with the file iterator by the new map (re - write the file).
 			 */
-		}
-		if(sortType==2) 
-		{
+			
+			this.setComperator(new CompairProductByAscendingID());
+			// restore all the map entities in ascending order
+			productsMap = new TreeMap<String, Product>(productsMap);
+			break;
+		
+		case eDescending_Order:
 			/*
 			 *  Create a comparator that sorts the products by descending order, 
 			 *  set the comparator by "setComperator" function, and create a tree map with this comparator.
 			 *  Copy all the the products inside the current map, and update the map.
 			 *  Update the file with the file iterator by the new map (re - write the file).
 			 */
-		}
-		if(sortType==3) 
-		{
+			this.setComperator(new CompairProductByDescendingID());
+			tempMap = new TreeMap<String, Product>(Collections.reverseOrder());
+			tempMap.putAll(productsMap);
+			productsMap =tempMap;
+			break;
+		
+		
+		case eIncome_Order:
 			/*
 			 * Create a linkedHashMap and copy all the the products inside the current map, and update the map.
 			 * Update the file with the file iterator by the new map (re - write the file).
 			 */
-		}
+			this.setComperator(null);
+			tempMap = new TreeMap<String, Product>();
+			tempMap.putAll(productsMap);
+			productsMap =tempMap;
+			break;
+			
+		default:
+			break;
+
+		}	
+
 	}
 	
-	private void setComperator(Comparator<Product> comparator) {
+	private void setComperator(Comparator<String> comparator) {
 		this.comparator=comparator;
 		
 	}
-	public Product fintProduct(String catalogNum)
-	{
+	
+	public Product findProduct(String catalogNum){
 		if(productsMap.containsKey(catalogNum))
 			return productsMap.get(catalogNum);
 		return null;
 	}
 
-	public void remove(String catalogNumber) {
+	public int removeProduct(String catalogNumber) {
 		productsMap.remove(catalogNumber);
+		return 1;
 		
 		/*
 		 * Removing specific product
@@ -103,11 +186,12 @@ public class Store {
 		 */
 		
 	}
-	public int getNumOfProducts()
-	{
+	
+	public int getNumOfProducts(){
 		return numOfProducts;
 	}
-	public Map getMap()
+	
+	public Map<String, Product>getMap()
 	{
 		return productsMap;
 	}
@@ -118,5 +202,33 @@ public class Store {
 		 * if there are no products to remove, return 0, if all removed return 1.
 		 */
 		return 1;
+	}
+
+	@Override
+	public int saveProductsToBinaryFile(String fileName) {
+
+		try {
+			ObjectOutputStream o = new ObjectOutputStream(new FileOutputStream(F_NAME));
+			o.writeObject(productsMap.size());
+			for(java.util.Map.Entry<String, Product> e : productsMap.entrySet())
+			{
+				o.writeObject(e.getKey());
+				o.writeObject(e.getValue());
+			}
+			o.close();
+			return 1;
+			
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return 0;
+	}
+
+	@Override
+	public void registerListener(StoreController controller) {
+		// TODO Auto-generated method stub
+		allListener.add(controller);
 	}
 }

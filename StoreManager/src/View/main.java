@@ -30,7 +30,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
-import Controller.Controller;
+import Controller.StoreController;
 import Model.Store;
 public class main extends Application{
 
@@ -46,7 +46,7 @@ public class main extends Application{
 	    Store model = new Store ();
 	    
 	    
-	    Controller controller= new Controller(model,view);
+	    StoreController controller= new StoreController(model,view);
 		
 	}
 

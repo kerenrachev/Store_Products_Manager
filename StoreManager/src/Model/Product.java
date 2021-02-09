@@ -3,23 +3,24 @@ package Model;
 public class Product {
 
 	private String productName;
-	private double storeCostPrice;
-	private double sellingPrice;
+	private int storeCostPrice;
+	private int sellingPrice;
 	private Customer customer;
-	public Product(String productName, double storeCostPrice, double sellingPrice,Customer customer)
+	
+	public Product(String productName, int costPrice, int sellingPrice2,Customer customer)
 	{
 		this.productName=productName;
-		this.storeCostPrice= storeCostPrice;
-		this.sellingPrice=sellingPrice;
+		this.storeCostPrice= costPrice;
+		this.sellingPrice=sellingPrice2;
 		this.customer=customer;
 	}
 	public String getProductName() {
 		return productName;
 	}
-	public double getStoreCostPrice() {
+	public int getStoreCostPrice() {
 		return storeCostPrice;
 	}
-	public double getSellingPrice() {
+	public int getSellingPrice() {
 		return sellingPrice;
 	}
 	public Customer getCustomer() {

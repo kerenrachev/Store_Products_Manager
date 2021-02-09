@@ -1,5 +1,14 @@
 package View;
 
+import java.util.Set;
+import java.util.TreeSet;
+
+import Controller.StoreController;
+import Model.AddCommand;
+import Model.Product;
+import interfaces.Command;
+import interfaces.StoreUIListener;
+import interfaces.Store_viewable;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -22,48 +31,62 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
-public class View {
-	public Button add;
-	public Label ins1;
-	public Label ins2;
-	public Label ins3;
-	public Label ins4;
-	public Label ins5;
-	public Label ins6;
-	public Label ins7;
-	public Label ins8;
-	public Label ins9;
-	public TextField catalog;
-	public TextField productName;
-	public TextField storeCost;
-	public TextField sellingCost;
-	public TextField customerName;
-	public TextField CustomerPhone;
-	public Label mainLabel;
-	public Label insLabel;
-	public TextField catalogNumber;
-	public Button searchButtonByCatalogNumber;
-	public RadioButton r1;
-	public RadioButton r2;
-	public RadioButton r3;
-	public RadioButton r4;
-	public Button sortButton;
-	public Button bSearch;
-	public Button bSort;
-	public Button bAddProduct;
-	public Button bShowAll;
-	public Button loadFromFile;
-	public Button removeProduct;
-	public ToggleGroup tg;
+public class View implements Store_viewable{
+	
+	private Button add;
+	private Label ins1;
+	private Label ins2;
+	private Label ins3;
+	private Label ins4;
+	private Label ins5;
+	private Label ins6;
+	private Label ins7;
+	private Label ins8;
+	private Label ins9;
+	private TextField catalog;
+	private TextField productName;
+	private TextField storeCost;
+	private TextField sellingCost;
+	private TextField customerName;
+	private TextField CustomerPhone;
+	private Label mainLabel;
+	private Label insLabel;
+	private TextField catalogNumber;
+	private Button searchButtonByCatalogNumber;
+	private RadioButton r1;
+	private RadioButton r2;
+	private RadioButton r3;
+	private RadioButton r4;
+	private Button sortButton;
+	private Button bSearch;
+	private Button bSort;
+	private Button bAddProduct;
+	private Button bShowAll;
+	private Button loadFromFile;
+	private Button removeProduct;
+	private ToggleGroup tg;
 	private Background buttondBackground;
+	
+	private Button btnAdd;
+	
+	private Set<StoreUIListener> allListeners;
+	
 	public View(Stage primaryStage) {
+		allListeners = new TreeSet<StoreUIListener>();
+		
+		btnAdd.setOnAction((event)->{
+			notifyToListeners(new AddCommand(this));
+		});
+		
+
+		
 		BorderPane bPane = new BorderPane();
-		Background b = new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY));
+		Background background = new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY));
 		buttondBackground = new Background(
 				new BackgroundFill(Color.CORNFLOWERBLUE, CornerRadii.EMPTY, Insets.EMPTY));
 		Background navButtonsBackground = new Background(
 				new BackgroundFill(Color.LIGHTSTEELBLUE, CornerRadii.EMPTY, Insets.EMPTY));
-		bPane.setBackground(b);
+		bPane.setBackground(background);
 		insLabel = new Label("Welcome to the store manager!");
 		mainLabel = new Label("Please choose your action from the navigator above.");
 
@@ -175,7 +198,280 @@ public class View {
 		ins8.setFont(Font.font("Tahoma", 17));
 		ins9.setFont(Font.font("Tahoma", 17));
 		r4.setFont(Font.font("Tahoma", 18));
-		// *********Component for showing all the products*********
+
+		
+		bSearch.setOnAction((ActionEvent event) -> {
+			// set the view frame
+			setBsearchView();
+ 
+			searchButtonByCatalogNumber.setOnAction((ActionEvent event2) -> {
+				if (catalogNumber.getText().isEmpty()) {
+					Label l = new Label("You cant search for a product without a catalog number!");
+					l.setTextFill(Color.RED);
+					OpenErrorStage(l);
+					return;
+				}
+				
+				String strCatalogNumber = catalogNumber.getText().toString();
+				for(StoreUIListener lister : allListeners)
+					lister.fireSearchForCatalogeNumber(strCatalogNumber);
+				
+				removeProduct.setOnAction((ActionEvent event3) -> {
+					for(StoreUIListener lister : allListeners)
+						lister.fireRemoveProductByCatalogeNumber(strCatalogNumber);
+				});
+			});
+		});
+		
+		
+		tg.selectedToggleProperty().addListener((obserableValue, old_toggle, new_toggle) -> {
+		    if (r1.isSelected()) {
+		        model.updateMapType(1);
+		    }
+		    else if (r2.isSelected()) {
+		        model.updateMapType(2);
+		    }
+		    else  {
+		    	model.updateMapType(3);
+		    }
+		});    
+		
+		
+
+		loadFromFile.setOnAction((ActionEvent event) -> {
+			int res= model.readProductsFromBinaryFile();
+			if(res==0)
+			{
+				Label l = new Label("There are no products inside the file! ");
+				l.setTextFill(Color.RED);
+				OpenErrorStage(l);
+				return;
+			}
+			else
+			{
+				Label l = new Label("Reading from file was sucssessful.");
+				l.setTextFill(Color.GREEN);
+				OpenErrorStage(l);
+				loadFromFile.setDisable(true);
+				return;
+			}
+		});
+		
+		
+
+		bSort.setOnAction((ActionEvent event) -> {
+			mainLabel.setVisible(false);
+			mainLabel.setManaged(false);
+			insLabel.setVisible(false);
+			insLabel.setManaged(false);
+			clearAll();
+			ins2.setVisible(true);
+			ins2.setManaged(true);
+			r1.setVisible(true);
+			r1.setManaged(true);
+			r2.setVisible(true);
+			r2.setManaged(true);
+			r3.setVisible(true);
+			r3.setManaged(true);
+			sortButton.setVisible(true);
+			sortButton.setManaged(true);
+			sortButton.setOnAction((ActionEvent event2) -> {
+				Label l = new Label("Sort type has been selected.");
+				l.setTextFill(Color.GREEN);
+				OpenErrorStage(l);
+				bSort.setDisable(true);
+				
+				ins2.setVisible(false);
+				ins2.setManaged(false);
+				r1.setVisible(false);
+				r1.setManaged(false);
+				r2.setVisible(false);
+				r2.setManaged(false);
+				r3.setVisible(false);
+				r3.setManaged(false);
+				sortButton.setVisible(false);
+				sortButton.setManaged(false);
+				return;
+			});
+		});
+		
+		bAddProduct.setOnAction((ActionEvent event) -> {
+			clearAll();
+			mainLabel.setVisible(false);
+			mainLabel.setManaged(false);
+			insLabel.setVisible(false);
+			insLabel.setManaged(false);
+			add.setVisible(true);
+			add.setManaged(true);
+			ins3.setVisible(true);
+			ins3.setManaged(true);
+			ins4.setVisible(true);
+			ins4.setManaged(true);
+			ins5.setVisible(true);
+			ins5.setManaged(true);
+			ins6.setVisible(true);
+			ins6.setManaged(true);
+			ins7.setVisible(true);
+			ins7.setManaged(true);
+			ins8.setVisible(true);
+			ins8.setManaged(true);
+			ins9.setVisible(true);
+			ins9.setManaged(true);
+			catalog.setVisible(true);
+			catalog.setManaged(true);
+			productName.setVisible(true);
+			productName.setManaged(true);
+			storeCost.setVisible(true);
+			storeCost.setManaged(true);
+			sellingCost.setVisible(true);
+			sellingCost.setManaged(true);
+			customerName.setVisible(true);
+			customerName.setManaged(true);
+			CustomerPhone.setVisible(true);
+			CustomerPhone.setManaged(true);
+			r4.setVisible(true);
+			r4.setManaged(true);
+
+			add.setOnAction((ActionEvent e) -> {
+				String catalogNumber = catalog.getText().toString();
+				if (catalogNumber.isEmpty()) {
+					Label l = new Label("You cant add a new product without a catalog number!");
+					l.setTextFill(Color.RED);
+					OpenErrorStage(l);
+					return;
+				}
+				String productName = productName.getText().toString();
+				int costPrice = 0, sellingPrice = 0;
+				if (!storeCost.getText().toString().isEmpty()) {
+					try {
+						costPrice = Integer.parseInt(storeCost.getText().toString());
+						sellingPrice = Integer.parseInt(sellingCost.getText().toString());
+
+					} catch (Exception ex) {
+						Label l = new Label("Prices needs to be positive namber ! ");
+						l.setTextFill(Color.RED);
+						OpenErrorStage(l);
+						return;
+					}
+				}
+				if (!sellingCost.getText().toString().isEmpty()) {
+					try {
+						sellingPrice = Integer.parseInt(sellingCost.getText().toString());
+					} catch (Exception ex) {
+						Label l = new Label("You cant put a string in a selling price field");
+						l.setTextFill(Color.RED);
+						OpenErrorStage(l);
+						return;
+					}
+				}
+				String clientName = customerName.getText().toString();
+				String phoneNum = CustomerPhone.getText().toString();
+				boolean clientInterested = false;
+				if (r4.isSelected())
+					clientInterested = true;
+				Customer c = new Customer(clientName, phoneNum, clientInterested);
+				Product p = new Product(productName, costPrice, sellingPrice, c);
+				model.addProduct(catalogNumber, p);
+				Label l = new Label("Product added sucsessfuly !");
+				l.setTextFill(Color.GREEN);
+				Button button = new Button ("Cancel");
+				button.setPrefSize(100, 30);
+				Background b= new Background(new BackgroundFill(Color.INDIANRED, CornerRadii.EMPTY, Insets.EMPTY));
+				button.setBackground(b);
+				Stage s2=OpenAddingFile(l,button);
+				button.setOnAction((ActionEvent event3) -> {
+					int res= model.removeLastProduct();
+					if(res==0)
+					{
+						Label ll = new Label("Cant remove this product");
+						ll.setTextFill(Color.RED);
+						OpenErrorStage(ll);
+						return;
+					}
+					else
+					{
+						Label l3 = new Label("Operation has been canceled");
+						l3.setTextFill(Color.GREEN);
+						OpenErrorStage(l3);
+						s2.close();
+					}
+				});
+				return;
+			});
+
+		});
+
+		
+		
+		bShowAll.setOnAction((ActionEvent event) -> {
+			TableView tableView = new TableView();
+			TableColumn<Product, String> c1 = new TableColumn<>("CatalogNum");
+			c1.setCellValueFactory(new PropertyValueFactory<>("catalogNum"));
+			TableColumn<Product, String> c2 = new TableColumn<>("ProductName");
+			c2.setCellValueFactory(new PropertyValueFactory<>("productName"));
+			TableColumn<Product, String> c3 = new TableColumn<>("CostPrice");
+			c3.setCellValueFactory(new PropertyValueFactory<>("costPrice"));
+			TableColumn<Product, String> c4 = new TableColumn<>("SellPrice");
+			c4.setCellValueFactory(new PropertyValueFactory<>("sellPrice"));
+			TableColumn<Product, String> c8 = new TableColumn<>("Profit");
+			c8.setCellValueFactory(new PropertyValueFactory<>("profit"));
+			TableColumn<Product, String> c5 = new TableColumn<>("CustomerName");
+			c5.setCellValueFactory(new PropertyValueFactory<>("customerName"));
+			TableColumn<Product, String> c6 = new TableColumn<>("CustomerPhone");
+			c6.setCellValueFactory(new PropertyValueFactory<>("customerPhone"));
+			TableColumn<Product, String> c7 = new TableColumn<>("Intersetd");
+			c7.setCellValueFactory(new PropertyValueFactory<>("intersetd"));
+			c1.setPrefWidth(160);
+			c2.setPrefWidth(160);
+			c3.setPrefWidth(160);
+			c4.setPrefWidth(160);
+			c5.setPrefWidth(160);
+			c6.setPrefWidth(160);
+			c7.setPrefWidth(160);
+			c8.setPrefWidth(160);
+			
+			ObservableList<TableRows> data = FXCollections.observableArrayList();
+		    tableView.getColumns().addAll(c1,c2,c3,c4,c8,c5,c6,c7);
+		    VBox vbox = new VBox(tableView);
+			
+
+			ArrayList <TableRows> array = new ArrayList<>();
+			Iterator<String> itr = model.getMap().keySet().iterator();
+			TableRows t;
+	        while (itr.hasNext()) {
+	        	String key=itr.next();
+	        	Product p =(Product) model.getMap().get(key);
+	        	t= new TableRows(key,p.getProductName(),"" +p.getStoreCostPrice(),p.getSellingPrice()+"",""+(p.getSellingPrice()-p.getStoreCostPrice()),p.getCustomer().getName(),
+	        			p.getCustomer().getPhoneNum(),p.getCustomer().isWantsUpdates()+"");
+	        	data.add(t);
+	        }
+	        tableView.setItems(data);
+		    Button removeAll = new Button("Delete all products.");
+		    removeAll.setPrefSize(200, 50);
+		    removeAll.setBackground(new Background(new BackgroundFill(Color.INDIANRED, CornerRadii.EMPTY, Insets.EMPTY)));
+		    vbox.getChildren().add(removeAll);
+		    vbox.setAlignment(Pos.CENTER);
+		    vbox.setSpacing(30);
+	        Stage stage= openProductsList(vbox);
+	        
+	        removeAll.setOnAction((ActionEvent event2) -> {
+	        	int res = model.removeAllProducts();
+	        	if(res==0)
+	        	{
+	        		Label ll = new Label("There are no products");
+					ll.setTextFill(Color.RED);
+					OpenErrorStage(ll);
+					return;
+	        	}
+	        	else {
+	        		Label ll = new Label("All products have been removed");
+					ll.setTextFill(Color.GREEN);
+					OpenErrorStage(ll);
+					stage.close();
+					return;
+	        	}
+	        });
+		});
 
 
 	    clearAll();
@@ -183,6 +479,10 @@ public class View {
 		primaryStage.show();
 
 	}
+		
+
+
+
 
 	public void clearAll() {
 		add.setVisible(false);
@@ -277,6 +577,83 @@ public class View {
 		products.setScene(new Scene(vBox, 1250,800));		
 		products.show();
 		return products;
+	}
+
+	@Override
+	public void registerListener(StoreController controller) {
+		allListeners.add(controller);
+	}
+
+
+	@Override
+	public void notifyToListeners(Command c) {
+		for(StoreUIListener l : allListeners)
+			l.executeCommand(c);
+			
+			
+		
+	}
+
+
+	public void setFindedProduct(Product p) {
+		if (p == null) {
+			Label l = new Label("No such product..");
+			l.setTextFill(Color.RED);
+			OpenErrorStage(l);
+			return;
+		}
+		Label l = new Label("Product has been found:");
+		l.setTextFill(Color.GREEN);
+		Label pName = new Label();
+		pName.setText("Product name: " + p.getProductName());
+		Label cost = new Label();
+		cost.setText("The cost for store: " + p.getStoreCostPrice());
+		Label sell = new Label();
+		sell.setText("The selling price to customer: " + p.getSellingPrice());
+		Label customerName = new Label();
+		customerName.setText("Customer's name: " + p.getCustomer().getName());
+		Label customerPhone = new Label();
+		customerPhone.setText("Customer's phone: " + p.getCustomer().getPhoneNum());
+		Label isInterested = new Label();
+		isInterested.setText("Wants updates about discount " + p.getCustomer().isWantsUpdates());
+		Label profit = new Label();
+		profit.setText("Clean profit is : " + (p.getSellingPrice() - p.getStoreCostPrice()));
+		Stage s=OpenProductDetailsStage(l, pName, cost, sell, customerName, customerPhone, isInterested, profit);
+		catalogNumber.clear();		
+	}
+
+	private void setBsearchView() {
+		
+		mainLabel.setVisible(false);
+		mainLabel.setManaged(false);
+		insLabel.setVisible(false);
+		insLabel.setManaged(false);
+		clearAll();
+		ins1.setVisible(true);
+		ins1.setManaged(true);
+		catalogNumber.setVisible(true);
+		catalogNumber.setManaged(true);
+		searchButtonByCatalogNumber.setVisible(true);
+		searchButtonByCatalogNumber.setManaged(true);		
+	}
+	
+	public void setRemoveProductResults(int res) {
+		Label l2 = new Label();
+		switch(res)
+		{
+		case 1:
+			 l2.setText("Product has been removed ");
+			l2.setTextFill(Color.GREEN);
+			OpenErrorStage(l2);
+			break;
+			
+		case -1:
+			l2.setText("Product has been removed ");
+			l2.setTextFill(Color.GREEN);
+			OpenErrorStage(l2);
+			break;
+		}
+			
 		
 	}
 
