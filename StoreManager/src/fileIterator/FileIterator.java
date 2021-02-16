@@ -50,7 +50,7 @@ public class FileIterator {
 		}
 
 		@Override
-		public Object next() {
+		public Map.Entry<String, Product> next() {
 			if (!hasNext())
 				throw new NoSuchElementException();
 

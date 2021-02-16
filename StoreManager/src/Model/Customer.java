@@ -6,8 +6,9 @@ import java.io.IOException;
 import java.io.Serializable;
 
 import file_iO.File_IO;
+import observer.Observer;
 
-public class Customer implements Serializable{
+public class Customer extends Observer implements Serializable {
 
 	/**
 	 * 
@@ -60,6 +61,11 @@ public class Customer implements Serializable{
 	@Override
 	public String toString() {
 		return "Customer [name=" + name + ", phoneNum=" + phoneNum + ", wantsUpdates=" + wantsUpdates + "]";
+	}
+
+	@Override
+	public String update() {
+		return this.name + "get the message";		
 	}
 
 	

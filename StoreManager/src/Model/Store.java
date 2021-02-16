@@ -1,5 +1,6 @@
 package Model;
 
+import java.awt.List;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
@@ -12,6 +13,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -27,9 +29,12 @@ import javax.print.DocFlavor.INPUT_STREAM;
 
 import Controller.StoreController;
 import Momento.StoreProductsMomento;
+import fileIterator.FileIterator;
 import file_iO.File_IO;
 import interfaces.StoreModelListener;
 import interfaces.Store_Interface;
+import observer.StoreUpdates;
+import storeExceptions.ProductIdNotFoundException;
 import storeExceptions.UnableToRecoveryLastProductException;
 
 
@@ -40,7 +45,9 @@ public class Store implements Store_Interface {
 	private Map <String,Product> productsMap; // the maps string is the product id;
 	private Set<StoreModelListener> allListener;
 	private Comparator<String> comparator;
+	private ArrayList<Customer> customerList = new ArrayList<Customer>();
 	private StoreProductsMomento productsMomento;
+	private StoreUpdates update;
 	int numOfProducts;
 	SortType sortType; 
 	
@@ -50,8 +57,11 @@ public class Store implements Store_Interface {
 		productsMap= new LinkedHashMap<String, Product>();
 		allListener = new TreeSet<StoreModelListener>();
 		sortType = SortType.eIncome_Order; //By default
+		update = StoreUpdates.getInstance();
 		
 	}
+	
+	
 	
 	
 	@Override
@@ -111,7 +121,7 @@ public class Store implements Store_Interface {
 		return 0;   // If the are no products inside the file, if you reading is successful return 1
 	}
 
-	public void addProduct(String key,Product p) {
+	public void addProduct(String key,Product p)  {
 		/*
 		 * After adding each product, you have to re- write the binary file-
 		 * Updated number of products and all of the products that are inside the map.
@@ -120,12 +130,55 @@ public class Store implements Store_Interface {
 		productsMomento = new StoreProductsMomento(productsMap);
 		productsMap.put(key, p);	
 		this.numOfProducts++;
+		if(p.getCustomer().wantsUpdates)
+			update.attach(p.getCustomer());
 		saveProductsToBinaryFile(F_NAME);
-		//startIterationOnFile();
+		try {
+			startIterationOnFile();
+		} catch (ProductIdNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 	}
 	
-	private void startIterationOnFile(){
+	private void startIterationOnFile() throws ProductIdNotFoundException{
+		// iterator menu have to change to gui
+		System.out.println("1) read file contact to the map");
+		System.out.println("2) remove product by ID");
+		FileIterator iter = new FileIterator();
+		interfaces.Iterator it = iter.getIterator(F_NAME);
+		int res =1;
+		Entry<String, Product> e ;
+		switch(res)
+		{
+		
+		case 1:// reading products from file using the iterator and insert to the map;
+			e = it.next();
+			productsMap.put(e.getKey() , e.getValue());
+			break;
+
+		case 2: // remove product by ID
+			String productID = "2001";
+			while(it.hasNext())
+			{
+				e = it.next();
+				if (e.getKey().equalsIgnoreCase(productID)) {
+					it.remove();
+					return;
+				}
+			}
+			throw new ProductIdNotFoundException();
+			
+			
+		case 3: // remove all products
+			while(it.hasNext()) {
+				e = it.next();
+				it.remove();
+				removeProduct(e.getKey());
+			}
+			
+		}
 		
 
 	}
@@ -219,6 +272,13 @@ public class Store implements Store_Interface {
 		return numOfProducts;
 	}
 	
+	public void setUpdateState() {
+		String[] observers = null;
+		update.setState("new status" , observers);
+		// create here new inner class that extends runnable (thread) and implements the last part of the project
+	}
+	
+	
 	public Map<String, Product>getMap()
 	{
 		return productsMap;
@@ -232,36 +292,7 @@ public class Store implements Store_Interface {
 		return 1;
 	}
 
-	public void writeFixedString(String str , int size , DataOutput dataOutput) throws IOException
-	/*
-	 * 
-	 * writing a object in binary file bit by bit in fix length
-	 * 
-	 * */
-	{
-		for (int i=0 ; i<size  ; i++) {
-			char bit =0;
-			if(i < str.length())
-				bit = str.charAt(i);
-			dataOutput.writeChar(bit);
-			}
-	}
 	
-//	  public String readFixedString(int size, DataInput dataInput) throws IOException {
-//		    StringBuffer strBuffer = new StringBuffer(size);
-//		    int count = 0;
-//		    boolean more = true;
-//		    while (more && count < size) {
-//		      char aChar = dataInput.readChar();
-//		      count++;
-//		      if (aChar == 0)
-//		        more = false;
-//		      else
-//		        strBuffer.append(aChar);
-//		    }
-//		    dataInput.skipBytes(2 * (size - count));
-//		    return strBuffer.toString();
-//		  }
 	
 	@Override
 	public void registerListener(StoreController controller) {
