@@ -1,22 +1,33 @@
 package Model;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.RandomAccessFile;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import javax.print.DocFlavor.INPUT_STREAM;
+
 import Controller.StoreController;
 import Momento.StoreProductsMomento;
+import file_iO.File_IO;
 import interfaces.StoreModelListener;
 import interfaces.Store_Interface;
 import storeExceptions.UnableToRecoveryLastProductException;
@@ -24,7 +35,7 @@ import storeExceptions.UnableToRecoveryLastProductException;
 
 public class Store implements Store_Interface {
 	public static final String F_NAME = "products txt";
-
+	public static final int PRODUCT_KEY_SIZE = 10 ; 
 	
 	private Map <String,Product> productsMap; // the maps string is the product id;
 	private Set<StoreModelListener> allListener;
@@ -42,7 +53,33 @@ public class Store implements Store_Interface {
 		
 	}
 	
-	public int readProductsFromBinaryFile(String fileName)
+	
+	@Override
+	public int saveProductsToBinaryFile(String fileName) {
+
+		try {
+			RandomAccessFile rafOut = new RandomAccessFile(F_NAME, "rw");
+	
+			
+			for(java.util.Map.Entry<String, Product> e : productsMap.entrySet())
+			{
+				writeFixedString(e.getKey(), PRODUCT_KEY_SIZE, rafOut);
+				e.getValue().writeProductToFile(rafOut);
+			}
+			rafOut.close();
+			return 1;
+			
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return 0;
+	}
+
+
+	
+	public int readProductsFromBinaryFile(String fileName) throws ClassNotFoundException
 	{
 		/* Here you need to read from binary file with an Iterator on "products.dat" In the following order: 
 		 * Read Int - counter for number of products
@@ -50,6 +87,27 @@ public class Store implements Store_Interface {
 		 * You have to put in a specific map with a comparator by the sortType.
 		 * You can use "updateMapType" function.
 		 */
+		
+		try {
+			RandomAccessFile rafIn = new RandomAccessFile(F_NAME, "r");
+			int size = (int)(rafIn.length() / (PRODUCT_KEY_SIZE + Product.PRODUCT_SIZE));
+			//System.out.println("rafIn.length = " + rafIn.length() + "size = " + size + " --- " + (PRODUCT_KEY_SIZE + Product.PRODUCT_SIZE));
+			for(int i =0 ; i < size ; i++)
+			{
+				String k = File_IO.readFixedString(PRODUCT_KEY_SIZE, rafIn);
+				Product p = Product.readProductToFile(rafIn);
+				productsMap.put(k ,p);
+			}
+
+			rafIn.close();
+			return 1;
+			
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
 		return 0;   // If the are no products inside the file, if you reading is successful return 1
 	}
 
@@ -63,43 +121,13 @@ public class Store implements Store_Interface {
 		productsMap.put(key, p);	
 		this.numOfProducts++;
 		saveProductsToBinaryFile(F_NAME);
-		startIterationOnFile();
+		//startIterationOnFile();
 
 	}
 	
-	private void startIterationOnFile() {
+	private void startIterationOnFile(){
 		
-//		class ConcreteIterator implements Iterator<Integer> {
-//			private int cur = 0; // the index of element that 'next' will return
-//			private int last = -1; // the index of the element to be removed
-//
-//			@Override
-//			public boolean hasNext() {
-//				return cur < productsMap.size();
-//			}
-//
-//			@Override
-//			public Integer next() {
-//				if (!hasNext())
-//					throw new NoSuchElementException();
-//				int tmp = a[cur];
-//				last = cur;
-//				cur++;
-//				return tmp;
-//			}
-//
-//			@Override
-//			public void remove() {
-//				if (last == -1)
-//					throw new IllegalStateException();
-//				for (int i = last; i < size - 1; i++)
-//					a[i] = a[i + 1];
-//				a = Arrays.copyOf(a, --size);
-//				cur = last;
-//				last = -1;
-//			}
-//
-//		}		
+
 	}
 
 	public int removeLastProduct() throws UnableToRecoveryLastProductException{
@@ -204,28 +232,37 @@ public class Store implements Store_Interface {
 		return 1;
 	}
 
-	@Override
-	public int saveProductsToBinaryFile(String fileName) {
-
-		try {
-			ObjectOutputStream o = new ObjectOutputStream(new FileOutputStream(F_NAME));
-			o.writeObject(productsMap.size());
-			for(java.util.Map.Entry<String, Product> e : productsMap.entrySet())
-			{
-				o.writeObject(e.getKey());
-				o.writeObject(e.getValue());
+	public void writeFixedString(String str , int size , DataOutput dataOutput) throws IOException
+	/*
+	 * 
+	 * writing a object in binary file bit by bit in fix length
+	 * 
+	 * */
+	{
+		for (int i=0 ; i<size  ; i++) {
+			char bit =0;
+			if(i < str.length())
+				bit = str.charAt(i);
+			dataOutput.writeChar(bit);
 			}
-			o.close();
-			return 1;
-			
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return 0;
 	}
-
+	
+//	  public String readFixedString(int size, DataInput dataInput) throws IOException {
+//		    StringBuffer strBuffer = new StringBuffer(size);
+//		    int count = 0;
+//		    boolean more = true;
+//		    while (more && count < size) {
+//		      char aChar = dataInput.readChar();
+//		      count++;
+//		      if (aChar == 0)
+//		        more = false;
+//		      else
+//		        strBuffer.append(aChar);
+//		    }
+//		    dataInput.skipBytes(2 * (size - count));
+//		    return strBuffer.toString();
+//		  }
+	
 	@Override
 	public void registerListener(StoreController controller) {
 		// TODO Auto-generated method stub
