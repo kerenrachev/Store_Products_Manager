@@ -1,9 +1,10 @@
+/Controller/
 /Model/
+/Momento/
 /View/
-/defaultPackage/
 /fileIterator/
-/interfaces/
 /file_iO/
+/interfaces/
+/observer/
 /storeExceptions/
 /store_Commands/
-/observer/

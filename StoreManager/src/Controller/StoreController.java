@@ -17,14 +17,17 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import storeExceptions.UnableToRecoveryLastProductException;
 import Model.TableRows;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Map;
 
 import Model.Customer;
 import Model.Product;
@@ -44,6 +47,26 @@ public class StoreController implements StoreModelListener , StoreUIListener{
 		
 		theModel.registerListener(this);
 		theView.registerListener(this);
+		
+		int result=0;
+		try {
+			result = theModel.readProductsFromBinaryFile("products txt");
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		if(result==0)
+		{
+			Label l = new Label("There are no products inside the file! ");
+			l.setTextFill(Color.RED);
+			theView.OpenErrorStage(l);
+		}
+		else
+		{
+			Label l = new Label("Products loaded from file.");
+			l.setTextFill(Color.GREEN);
+			theView.OpenErrorStage(l);
+		}
 	}
 
 
@@ -64,6 +87,66 @@ public class StoreController implements StoreModelListener , StoreUIListener{
 		int res = theModel.removeProduct(catalogNumber);
 		theView.setRemoveProductResults(res);
 		
+	}
+
+
+	@Override
+	public void fireUpdateMapType(int mapType) {
+		theModel.updateMapType(mapType);
+		
+	}
+
+	@Override
+	public int firereadProductsFromBinaryFile(String F_NAME) {
+		int res=0;
+		try {
+			res = theModel.readProductsFromBinaryFile(F_NAME);
+		} catch (ClassNotFoundException e) {
+			
+			e.printStackTrace();
+		}
+		return res;	
+	}
+
+
+	@Override
+	public void fireAddProduct(String catalogNumber, Product p) {
+		theModel.addProduct(catalogNumber, p);
+		
+	}
+
+
+	@Override
+	public int fireremoveLastProduct() {
+		int res=0;
+		try {
+			res = theModel.removeLastProduct();
+		} catch (UnableToRecoveryLastProductException e) {
+			e.printStackTrace();
+		}
+		return res;
+	}
+
+
+	@Override
+	public Map getMap() {
+		return theModel.getMap();
+	}
+
+
+	@Override
+	public int removeAllProducts() {
+		int res=0;
+		res = theModel.removeAllProducts();
+		return res;
+	}
+
+
+	@Override
+	public int fireSendUpdateMassages() {
+		int res=0;
+		res = theModel.sendMassages();
+		return res;
 	}
 	
 	

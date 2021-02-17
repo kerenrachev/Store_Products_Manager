@@ -10,4 +10,14 @@ public interface StoreUIListener {
 	void fireSearchForCatalogeNumber(String strCatalogNumber);
 
 	void fireRemoveProductByCatalogeNumber(String catalogNumber);
+
+	void fireUpdateMapType(int mapType);
+
+	int firereadProductsFromBinaryFile(String F_NAME);
+
+	void fireAddProduct(String catalogNumber, Product p);
+
+	int fireremoveLastProduct();
+
+	int fireSendUpdateMassages();
 }

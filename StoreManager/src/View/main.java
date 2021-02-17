@@ -36,7 +36,7 @@ import Model.Store;
 public class main extends Application{
 
 	public static void main(String[] args) {
-		//launch(args);
+		launch(args);
 		Store s = new Store();
 		Check check = new Check(s);
 	}

@@ -16,6 +16,7 @@ import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -55,15 +56,13 @@ public class Store implements Store_Interface {
 	{
 		numOfProducts=0;
 		productsMap= new LinkedHashMap<String, Product>();
-		allListener = new TreeSet<StoreModelListener>();
+		allListener = new HashSet<StoreModelListener>();
 		sortType = SortType.eIncome_Order; //By default
+
 		update = StoreUpdates.getInstance();
 		
 	}
-	
-	
-	
-	
+
 	@Override
 	public int saveProductsToBinaryFile(String fileName) {
 
@@ -73,7 +72,7 @@ public class Store implements Store_Interface {
 			
 			for(java.util.Map.Entry<String, Product> e : productsMap.entrySet())
 			{
-				writeFixedString(e.getKey(), PRODUCT_KEY_SIZE, rafOut);
+				File_IO.writeFixedString(e.getKey(), PRODUCT_KEY_SIZE, rafOut);
 				e.getValue().writeProductToFile(rafOut);
 			}
 			rafOut.close();
@@ -195,9 +194,9 @@ public class Store implements Store_Interface {
 		return 1;  // If product has been removed successfully
 	}
 	
-	public void updateMapType(SortType type)
+	public void updateMapType(int type)
 	{
-		this.sortType=type;
+		this.sortType=SortType.values()[type];
 		Map<String, Product> tempMap;
 		switch(this.sortType) {
 		
@@ -296,7 +295,13 @@ public class Store implements Store_Interface {
 	
 	@Override
 	public void registerListener(StoreController controller) {
-		// TODO Auto-generated method stub
 		allListener.add(controller);
+	}
+
+	public int sendMassages() {
+		
+		
+		// Return 0 if there are no clients that are ineterested in updates.
+		return 0;
 	}
 }

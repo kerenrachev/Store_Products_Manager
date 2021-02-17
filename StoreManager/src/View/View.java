@@ -1,14 +1,22 @@
 package View;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeSet;
 
 import Controller.StoreController;
 import Model.AddCommand;
+import Model.Customer;
 import Model.Product;
+import Model.TableRows;
 import interfaces.Command;
+import interfaces.StoreModelListener;
 import interfaces.StoreUIListener;
 import interfaces.Store_viewable;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -20,6 +28,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.BorderPane;
@@ -62,22 +71,15 @@ public class View implements Store_viewable{
 	private Button bSort;
 	private Button bAddProduct;
 	private Button bShowAll;
-	private Button loadFromFile;
+	private Button sendUpdateMassages;
 	private Button removeProduct;
 	private ToggleGroup tg;
 	private Background buttondBackground;
-	
-	private Button btnAdd;
-	
+
 	private Set<StoreUIListener> allListeners;
-	
+	private StoreModelListener modelListener;
 	public View(Stage primaryStage) {
-		allListeners = new TreeSet<StoreUIListener>();
-		
-		btnAdd.setOnAction((event)->{
-			notifyToListeners(new AddCommand(this));
-		});
-		
+		allListeners = new HashSet<StoreUIListener>();
 
 		
 		BorderPane bPane = new BorderPane();
@@ -115,10 +117,10 @@ public class View implements Store_viewable{
 		navBox.setPadding(new Insets(35, 12, 15, 12));
 		navBox.setSpacing(20);
 		bPane.setTop(navBox);
-		loadFromFile= new Button ("Load all from file");
-		loadFromFile.setPrefSize(200, 40);
-		loadFromFile.setBackground(navButtonsBackground);
-		navBox.getChildren().addAll(bSearch, bSort, bAddProduct, bShowAll,loadFromFile);
+		sendUpdateMassages= new Button ("Send massages");
+		sendUpdateMassages.setPrefSize(200, 40);
+		sendUpdateMassages.setBackground(navButtonsBackground);
+		navBox.getChildren().addAll(bSearch, bSort, bAddProduct, bShowAll,sendUpdateMassages);
 
 		// Right
 		VBox rightBox = new VBox();
@@ -213,46 +215,51 @@ public class View implements Store_viewable{
 				}
 				
 				String strCatalogNumber = catalogNumber.getText().toString();
-				for(StoreUIListener lister : allListeners)
-					lister.fireSearchForCatalogeNumber(strCatalogNumber);
+				for(StoreUIListener listener : allListeners)
+					listener.fireSearchForCatalogeNumber(strCatalogNumber);
 				
 				removeProduct.setOnAction((ActionEvent event3) -> {
-					for(StoreUIListener lister : allListeners)
-						lister.fireRemoveProductByCatalogeNumber(strCatalogNumber);
+					for(StoreUIListener listener : allListeners)
+						listener.fireRemoveProductByCatalogeNumber(strCatalogNumber);
 				});
 			});
 		});
 		
 		
 		tg.selectedToggleProperty().addListener((obserableValue, old_toggle, new_toggle) -> {
+			int mapType=0;
 		    if (r1.isSelected()) {
-		        model.updateMapType(1);
+		    	mapType=1;
 		    }
 		    else if (r2.isSelected()) {
-		        model.updateMapType(2);
+		    	mapType=2;
 		    }
 		    else  {
-		    	model.updateMapType(3);
+		    	mapType=3;
 		    }
+		    for(StoreUIListener listener : allListeners)
+				listener.fireUpdateMapType(mapType);
 		});    
 		
 		
 
-		loadFromFile.setOnAction((ActionEvent event) -> {
-			int res= model.readProductsFromBinaryFile();
+		sendUpdateMassages.setOnAction((ActionEvent event) -> {
+
+			int res=0;
+			 for(StoreUIListener listener : allListeners)
+					res = listener.fireSendUpdateMassages();
 			if(res==0)
 			{
-				Label l = new Label("There are no products inside the file! ");
+				Label l = new Label("There are no customers who are insetersted in updates!");
 				l.setTextFill(Color.RED);
 				OpenErrorStage(l);
 				return;
 			}
 			else
 			{
-				Label l = new Label("Reading from file was sucssessful.");
+				Label l = new Label("Massages has been sent!");
 				l.setTextFill(Color.GREEN);
 				OpenErrorStage(l);
-				loadFromFile.setDisable(true);
 				return;
 			}
 		});
@@ -340,7 +347,7 @@ public class View implements Store_viewable{
 					OpenErrorStage(l);
 					return;
 				}
-				String productName = productName.getText().toString();
+				String productNameString = productName.getText().toString();
 				int costPrice = 0, sellingPrice = 0;
 				if (!storeCost.getText().toString().isEmpty()) {
 					try {
@@ -370,8 +377,9 @@ public class View implements Store_viewable{
 				if (r4.isSelected())
 					clientInterested = true;
 				Customer c = new Customer(clientName, phoneNum, clientInterested);
-				Product p = new Product(productName, costPrice, sellingPrice, c);
-				model.addProduct(catalogNumber, p);
+				Product p = new Product(productNameString, costPrice, sellingPrice, c);
+				 for(StoreUIListener listener : allListeners)
+						listener.fireAddProduct(catalogNumber, p);
 				Label l = new Label("Product added sucsessfuly !");
 				l.setTextFill(Color.GREEN);
 				Button button = new Button ("Cancel");
@@ -380,7 +388,9 @@ public class View implements Store_viewable{
 				button.setBackground(b);
 				Stage s2=OpenAddingFile(l,button);
 				button.setOnAction((ActionEvent event3) -> {
-					int res= model.removeLastProduct();
+					int res=0;
+					 for(StoreUIListener listener : allListeners)
+							res = listener.fireremoveLastProduct();
 					if(res==0)
 					{
 						Label ll = new Label("Cant remove this product");
@@ -433,14 +443,12 @@ public class View implements Store_viewable{
 			ObservableList<TableRows> data = FXCollections.observableArrayList();
 		    tableView.getColumns().addAll(c1,c2,c3,c4,c8,c5,c6,c7);
 		    VBox vbox = new VBox(tableView);
-			
-
 			ArrayList <TableRows> array = new ArrayList<>();
-			Iterator<String> itr = model.getMap().keySet().iterator();
+			Iterator<String> itr = modelListener.getMap().keySet().iterator();
 			TableRows t;
 	        while (itr.hasNext()) {
 	        	String key=itr.next();
-	        	Product p =(Product) model.getMap().get(key);
+	        	Product p =(Product) modelListener.getMap().get(key);
 	        	t= new TableRows(key,p.getProductName(),"" +p.getStoreCostPrice(),p.getSellingPrice()+"",""+(p.getSellingPrice()-p.getStoreCostPrice()),p.getCustomer().getName(),
 	        			p.getCustomer().getPhoneNum(),p.getCustomer().isWantsUpdates()+"");
 	        	data.add(t);
@@ -455,7 +463,7 @@ public class View implements Store_viewable{
 	        Stage stage= openProductsList(vbox);
 	        
 	        removeAll.setOnAction((ActionEvent event2) -> {
-	        	int res = model.removeAllProducts();
+	        	int res = modelListener.removeAllProducts();
 	        	if(res==0)
 	        	{
 	        		Label ll = new Label("There are no products");
@@ -582,6 +590,7 @@ public class View implements Store_viewable{
 	@Override
 	public void registerListener(StoreController controller) {
 		allListeners.add(controller);
+		this.modelListener = controller;
 	}
 
 
@@ -589,9 +598,6 @@ public class View implements Store_viewable{
 	public void notifyToListeners(Command c) {
 		for(StoreUIListener l : allListeners)
 			l.executeCommand(c);
-			
-			
-		
 	}
 
 

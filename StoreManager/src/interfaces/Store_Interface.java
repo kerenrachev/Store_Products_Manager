@@ -17,7 +17,7 @@ public interface Store_Interface {
 	int 	saveProductsToBinaryFile(String fileName);
 	void 	addProduct(String key,Product p) throws ProductIdNotFoundException;
 	int		removeLastProduct() throws UnableToRecoveryLastProductException;
-	void 	updateMapType(SortType type);
+	void 	updateMapType(int type);
 	Product findProduct(String catalogNum);
 	int		removeProduct(String catalogNumber);
 	int 	getNumOfProducts();
