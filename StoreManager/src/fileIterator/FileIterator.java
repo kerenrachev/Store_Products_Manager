@@ -1,27 +1,24 @@
 package fileIterator;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.RandomAccessFile;
+import java.util.Iterator;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 
 import Model.Product;
 import Model.Store;
 import file_iO.File_IO;
-import interfaces.Iterator;
 
 public class FileIterator {
 	
-	public Iterator getIterator(String FileName) {
+	public Iterator<Map.Entry<String , Product>> getIterator(String FileName) {
 		return new ConcreteFileIterator(FileName);	
 	}
 
 
-	private class ConcreteFileIterator implements Iterator{
+	private class ConcreteFileIterator implements Iterator<Map.Entry<String , Product>>{
 		
 		private File f;
 		private int size;
@@ -36,7 +33,7 @@ public class FileIterator {
 			f = new File(fileName);
 			try {
 				raf = new RandomAccessFile(fileName, "rw");
-				int size = (int)(raf.length());// / (Store.PRODUCT_KEY_SIZE + Product.PRODUCT_SIZE));				
+				size = (int)(raf.length());// / (Store.PRODUCT_KEY_SIZE + Product.PRODUCT_SIZE));				
 				
 			}catch (Exception e) {
 				e.printStackTrace();

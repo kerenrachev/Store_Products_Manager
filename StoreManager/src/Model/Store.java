@@ -49,6 +49,7 @@ public class Store implements Store_Interface {
 	private ArrayList<Customer> customerList = new ArrayList<Customer>();
 	private StoreProductsMomento productsMomento;
 	private StoreUpdates update;
+	private Iterator<Entry<String, Product>> it;
 	int numOfProducts;
 	SortType sortType; 
 	
@@ -58,9 +59,8 @@ public class Store implements Store_Interface {
 		productsMap= new LinkedHashMap<String, Product>();
 		allListener = new HashSet<StoreModelListener>();
 		sortType = SortType.eIncome_Order; //By default
-
+		it = new FileIterator().getIterator(F_NAME);
 		update = StoreUpdates.getInstance();
-		
 	}
 
 	@Override
@@ -145,8 +145,8 @@ public class Store implements Store_Interface {
 		// iterator menu have to change to gui
 		System.out.println("1) read file contact to the map");
 		System.out.println("2) remove product by ID");
-		FileIterator iter = new FileIterator();
-		interfaces.Iterator it = iter.getIterator(F_NAME);
+//		FileIterator iter = new FileIterator();
+		Iterator<Entry<String, Product>> it = new FileIterator().getIterator(F_NAME);
 		int res =1;
 		Entry<String, Product> e ;
 		switch(res)
@@ -288,6 +288,12 @@ public class Store implements Store_Interface {
 		 * Remove all products from map and binary file with the iterator,
 		 * if there are no products to remove, return 0, if all removed return 1.
 		 */
+		Entry<String, Product> e ;
+		while(it.hasNext()) {
+			e = it.next();
+			it.remove();
+			removeProduct(e.getKey());
+		}
 		return 1;
 	}
 
