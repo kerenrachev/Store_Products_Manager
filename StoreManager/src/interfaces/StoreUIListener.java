@@ -5,7 +5,6 @@ import javafx.scene.control.TextField;
 
 public interface StoreUIListener {
 
-	void executeCommand(Command c);
 
 	void fireSearchForCatalogeNumber(String strCatalogNumber);
 
@@ -19,5 +18,5 @@ public interface StoreUIListener {
 
 	int fireremoveLastProduct();
 
-	int fireSendUpdateMassages();
+	int fireSendUpdateMassages(String massage);
 }

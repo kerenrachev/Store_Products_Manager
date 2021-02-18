@@ -4,7 +4,7 @@ import Model.Product;
 import Model.Store;
 import interfaces.Command;
 
-public class AddProductCommand implements Command{
+public class AddProductCommand implements Command<String>{
 	
 	private Store store;
 	private String key;
@@ -18,7 +18,8 @@ public class AddProductCommand implements Command{
 	}
 
 	@Override
-	public void execute() {
+	public String execute() {
 		store.addProduct(key, product);
+		return key;
 	}
 }

@@ -4,14 +4,11 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.TreeSet;
 
 import Controller.StoreController;
-import Model.AddCommand;
 import Model.Customer;
 import Model.Product;
 import Model.TableRows;
-import interfaces.Command;
 import interfaces.StoreModelListener;
 import interfaces.StoreUIListener;
 import interfaces.Store_viewable;
@@ -247,7 +244,8 @@ public class View implements Store_viewable{
 
 			int res=0;
 			 for(StoreUIListener listener : allListeners)
-					res = listener.fireSendUpdateMassages();
+				 // need to fix and get the massage form the gui
+					res = listener.fireSendUpdateMassages("Massage");
 			if(res==0)
 			{
 				Label l = new Label("There are no customers who are insetersted in updates!");
@@ -463,21 +461,21 @@ public class View implements Store_viewable{
 	        Stage stage= openProductsList(vbox);
 	        
 	        removeAll.setOnAction((ActionEvent event2) -> {
-	        	int res = modelListener.removeAllProducts();
-	        	if(res==0)
-	        	{
-	        		Label ll = new Label("There are no products");
-					ll.setTextFill(Color.RED);
-					OpenErrorStage(ll);
-					return;
-	        	}
-	        	else {
-	        		Label ll = new Label("All products have been removed");
-					ll.setTextFill(Color.GREEN);
-					OpenErrorStage(ll);
-					stage.close();
-					return;
-	        	}
+				 for(StoreUIListener listener : allListeners) {
+					int res = modelListener.removeAllProducts();
+					if (res == 0) {
+						Label ll = new Label("There are no products");
+						ll.setTextFill(Color.RED);
+						OpenErrorStage(ll);
+						return;
+					} else {
+						Label ll = new Label("All products have been removed");
+						ll.setTextFill(Color.GREEN);
+						OpenErrorStage(ll);
+						stage.close();
+						return;
+					}
+				 }
 	        });
 		});
 
@@ -591,13 +589,6 @@ public class View implements Store_viewable{
 	public void registerListener(StoreController controller) {
 		allListeners.add(controller);
 		this.modelListener = controller;
-	}
-
-
-	@Override
-	public void notifyToListeners(Command c) {
-		for(StoreUIListener l : allListeners)
-			l.executeCommand(c);
 	}
 
 

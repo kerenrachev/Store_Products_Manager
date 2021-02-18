@@ -1,68 +1,50 @@
 package Controller;
 
-import Model.Store;
-import View.View;
-import interfaces.Command;
-import interfaces.StoreModelListener;
-import interfaces.StoreUIListener;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundFill;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.CornerRadii;
-import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.stage.Stage;
-import storeExceptions.UnableToRecoveryLastProductException;
-import Model.TableRows;
-
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.Map;
 
-import Model.Customer;
 import Model.Product;
+import Model.Store;
+import View.View;
+import interfaces.StoreModelListener;
+import interfaces.StoreUIListener;
+import javafx.scene.control.Label;
+import javafx.scene.paint.Color;
+import store_Commands.AddProductCommand;
+import store_Commands.FindProductCommand;
+import store_Commands.GetMapCommand;
+import store_Commands.ReadProductsFromBinaryFileCommand;
+import store_Commands.RemoveAllProductsCommand;
+import store_Commands.RemoveLastProductCommand;
+import store_Commands.RemoveProductCommand;
+import store_Commands.SendMassagesCommand;
+import store_Commands.UpdateMapCommand;
 
-public class StoreController implements StoreModelListener , StoreUIListener{
-	//private Store model;
-	//private View view;
-	
+public class StoreController implements StoreModelListener, StoreUIListener {
+	// private Store model;
+	// private View view;
+
 	private Store theModel;
 	private View theView;
-	
-	
-	public StoreController(Store model , View view)
-	{
-		theModel  = model;
+
+	public StoreController(Store model, View view) {
+		theModel = model;
 		theView = view;
-		
+
 		theModel.registerListener(this);
 		theView.registerListener(this);
-		
-		int result=0;
+
+		int result = 0;
 		try {
 			result = theModel.readProductsFromBinaryFile("products txt");
 		} catch (ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		if(result==0)
-		{
+		if (result == 0) {
 			Label l = new Label("There are no products inside the file! ");
 			l.setTextFill(Color.RED);
 			theView.OpenErrorStage(l);
-		}
-		else
-		{
+		} else {
 			Label l = new Label("Products loaded from file.");
 			l.setTextFill(Color.GREEN);
 			theView.OpenErrorStage(l);
@@ -71,83 +53,51 @@ public class StoreController implements StoreModelListener , StoreUIListener{
 
 
 	@Override
-	public void executeCommand(Command c) {
-		c.execute();
-	}
-
-
-	@Override
 	public void fireSearchForCatalogeNumber(String strCatalogNumber) {
-		theView.setFindedProduct(theModel.findProduct(strCatalogNumber));
-	}
+		theView.setFindedProduct(new FindProductCommand(theModel, strCatalogNumber).execute());
 
+	}
 
 	@Override
 	public void fireRemoveProductByCatalogeNumber(String catalogNumber) {
-		int res = theModel.removeProduct(catalogNumber);
+		int res = new RemoveProductCommand(theModel, catalogNumber).execute();
 		theView.setRemoveProductResults(res);
-		
-	}
 
+	}
 
 	@Override
 	public void fireUpdateMapType(int mapType) {
-		theModel.updateMapType(mapType);
-		
+		new UpdateMapCommand(theModel, mapType).execute();
 	}
 
 	@Override
 	public int firereadProductsFromBinaryFile(String F_NAME) {
-		int res=0;
-		try {
-			res = theModel.readProductsFromBinaryFile(F_NAME);
-		} catch (ClassNotFoundException e) {
-			
-			e.printStackTrace();
-		}
-		return res;	
+		return new ReadProductsFromBinaryFileCommand(theModel, F_NAME).execute();
 	}
-
 
 	@Override
 	public void fireAddProduct(String catalogNumber, Product p) {
-		theModel.addProduct(catalogNumber, p);
-		
+		new AddProductCommand(theModel, catalogNumber, p).execute();
 	}
-
 
 	@Override
 	public int fireremoveLastProduct() {
-		int res=0;
-		try {
-			res = theModel.removeLastProduct();
-		} catch (UnableToRecoveryLastProductException e) {
-			e.printStackTrace();
-		}
-		return res;
+		return new RemoveLastProductCommand(theModel).execute();
 	}
-
 
 	@Override
-	public Map getMap() {
-		return theModel.getMap();
+	public Map<String, Product> getMap() {
+		return new GetMapCommand(theModel).execute();
 	}
-
 
 	@Override
 	public int removeAllProducts() {
-		int res=0;
-		res = theModel.removeAllProducts();
-		return res;
+		return new RemoveAllProductsCommand(theModel).execute();
 	}
-
 
 	@Override
-	public int fireSendUpdateMassages() {
-		int res=0;
-		res = theModel.sendMassages();
-		return res;
+	public int fireSendUpdateMassages(String massage) {
+		return new SendMassagesCommand(theModel,massage).execute();
 	}
-	
-	
+
 }

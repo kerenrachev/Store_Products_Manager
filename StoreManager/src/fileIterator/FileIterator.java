@@ -25,6 +25,7 @@ public class FileIterator {
 		private RandomAccessFile raf;
 		private byte[] binKey;
 		private byte[] binProduct;
+		private int singleEntitySize = (Store.PRODUCT_KEY_SIZE*2) + Product.PRODUCT_SIZE;
 		
 		private int current =0;
 		private int last =-1;
@@ -57,7 +58,7 @@ public class FileIterator {
 				MyEntry entry = new MyEntry(k, p);
 				
 				last = current;
-				current += (Store.PRODUCT_KEY_SIZE + Product.PRODUCT_SIZE);	
+				current += singleEntitySize;	
 				return entry;
  
 			}
@@ -72,18 +73,28 @@ public class FileIterator {
 		public void remove() {
 			if (last == -1)
 				throw new IllegalStateException();
+
+				
+			
 			try {
+				if(size<=singleEntitySize) {
+					raf.setLength(0);
+					last =-1;
+					raf.close();
+					return;
+				}
 				while(hasNext()) {
-					int pos = last;
+					int pos = last+=singleEntitySize;
 					raf.seek(current);
 					String k = File_IO.readFixedString(Store.PRODUCT_KEY_SIZE, raf);
 					Product p = Product.readProductToFile(raf);
 					raf.seek(pos);
-					File_IO.readFixedString(Store.PRODUCT_KEY_SIZE, raf);
+					File_IO.writeFixedString(k,Store.PRODUCT_KEY_SIZE, raf);
 					p.writeProductToFile(raf);
+					current = (int) raf.getFilePointer();
 					
 				}
-				raf.setLength(size - Store.PRODUCT_KEY_SIZE - Product.PRODUCT_SIZE);
+				raf.setLength(size - singleEntitySize);
 				last =-1;
 				raf.close();
 			} catch (IOException e) {

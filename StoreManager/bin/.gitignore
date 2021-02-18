@@ -1,3 +1,10 @@
-/fileIterator/
+/Controller/
 /Model/
+/Momento/
+/View/
+/fileIterator/
+/file_iO/
 /interfaces/
+/observer/
+/storeExceptions/
+/store_Commands/
