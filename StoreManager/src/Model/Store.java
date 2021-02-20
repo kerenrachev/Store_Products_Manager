@@ -29,11 +29,13 @@ public class Store implements Store_Interface {
 	public static final int PRODUCT_KEY_SIZE = 10;
 
 	private Map<String, Product> productsMap; // the maps string is the product id;
+	private LinkedHashMap <String, Product> productsDefualtOrder;
 	private Set<StoreModelListener> allListener;
 	private Comparator<String> comparator;
 	private ArrayList<Customer> customerList = new ArrayList<Customer>();
 	private StoreProductsMomento productsMomento;
-	private StoreUpdates update;
+	private StoreUpdates updates;
+	String[] customersNames;
 	private Iterator<Entry<String, Product>> it;
 	int numOfProducts;
 	SortType sortType;
@@ -44,7 +46,7 @@ public class Store implements Store_Interface {
 		allListener = new HashSet<StoreModelListener>();
 		sortType = SortType.eIncome_Order; // By default
 		it = new FileIterator().getIterator(F_NAME);
-		update = StoreUpdates.getInstance();
+		updates = StoreUpdates.getInstance();
 	}
 
 	@Override
@@ -79,13 +81,20 @@ public class Store implements Store_Interface {
 
 		try {
 			RandomAccessFile rafIn = new RandomAccessFile(F_NAME, "r");
+			if(rafIn.length()==0)
+				return 0;
 			int size = (int) (rafIn.length() / (PRODUCT_KEY_SIZE + Product.PRODUCT_SIZE));
 			// System.out.println("rafIn.length = " + rafIn.length() + "size = " + size + "
 			// --- " + (PRODUCT_KEY_SIZE + Product.PRODUCT_SIZE));
 			for (int i = 0; i < size; i++) {
+				numOfProducts++;
 				String k = File_IO.readFixedString(PRODUCT_KEY_SIZE, rafIn);
 				Product p = Product.readProductToFile(rafIn);
 				productsMap.put(k, p);
+				if(p.getCustomer().isWantsUpdates())
+				{
+					updates.attach(p.getCustomer());
+				}
 			}
 
 			rafIn.close();
@@ -110,16 +119,13 @@ public class Store implements Store_Interface {
 		productsMap.put(key, p);
 		this.numOfProducts++;
 		if (p.getCustomer().wantsUpdates)
-			update.attach(p.getCustomer());
+			updates.attach(p.getCustomer());
 		saveProductsToBinaryFile(F_NAME);
 
 
 	}
 
 	private void startIterationOnFile() throws ProductIdNotFoundException {
-		// iterator menu have to change to gui
-		System.out.println("1) read file contact to the map");
-		System.out.println("2) remove product by ID");
 		Iterator<Entry<String, Product>> it = new FileIterator().getIterator(F_NAME);
 		int res = 1;
 		Entry<String, Product> e;
@@ -147,11 +153,8 @@ public class Store implements Store_Interface {
 				it.remove();
 				removeProduct(e.getKey());
 			}
-
 		}
-
 	}
-
 	public int removeLastProduct() throws UnableToRecoveryLastProductException {
 		/*
 		 * Allow by Memento pattern to cancel the operation of adding the last product.
@@ -166,6 +169,7 @@ public class Store implements Store_Interface {
 
 	public void updateMapType(int type) {
 		this.sortType = SortType.values()[type];
+		System.out.println(SortType.values()[type]);
 		Map<String, Product> tempMap;
 		switch (this.sortType) {
 
@@ -180,7 +184,11 @@ public class Store implements Store_Interface {
 
 			this.setComperator(new CompairProductByAscendingID());
 			// restore all the map entities in ascending order
-			productsMap = new TreeMap<String, Product>(productsMap);
+			TreeMap<String, Product> productsMapTemp = new TreeMap<String, Product>(comparator);
+			productsMapTemp.putAll(productsMap);
+			removeAllProducts();
+			reWriteBinaryFileAndMapWithSortedProducts(productsMapTemp);
+			productsMap=productsMapTemp;
 			break;
 
 		case eDescending_Order:
@@ -192,9 +200,11 @@ public class Store implements Store_Interface {
 			 * file).
 			 */
 			this.setComperator(new CompairProductByDescendingID());
-			tempMap = new TreeMap<String, Product>(Collections.reverseOrder());
-			tempMap.putAll(productsMap);
-			productsMap = tempMap;
+			productsMapTemp = new TreeMap<String, Product>(comparator);
+			productsMapTemp.putAll(productsMap);
+			removeAllProducts();
+			reWriteBinaryFileAndMapWithSortedProducts(productsMapTemp);
+			productsMap=productsMapTemp;
 			break;
 
 		case eIncome_Order:
@@ -203,10 +213,14 @@ public class Store implements Store_Interface {
 			 * and update the map. Update the file with the file iterator by the new map (re
 			 * - write the file).
 			 */
-			this.setComperator(null);
-			tempMap = new TreeMap<String, Product>();
-			tempMap.putAll(productsMap);
-			productsMap = tempMap;
+			this.setComperator(new ValueComparatorForIncomeOrder(productsMap));
+			productsMapTemp = new TreeMap<String, Product>(comparator);
+			productsMapTemp.putAll(productsMap);
+			removeAllProducts();
+			reWriteBinaryFileAndMapWithSortedProducts(productsMapTemp);
+			//LinkedHashMap<String , Product> newMap = new LinkedHashMap<String, Product>();
+			productsMap=  new LinkedHashMap<String, Product>(productsMap);
+			System.out.println("WOOOOOOOOOOORKSSSSSSSSSSSSSSSSSSS");
 			break;
 
 		default:
@@ -214,6 +228,14 @@ public class Store implements Store_Interface {
 
 		}
 
+	}
+
+	private void reWriteBinaryFileAndMapWithSortedProducts(TreeMap <String, Product> map) {
+		for(Iterator<Entry<String, Product>> it = map.entrySet().iterator(); it.hasNext(); ) {
+		    Entry<String, Product> entry = it.next();
+		    addProduct(entry.getKey(),entry.getValue());
+		}
+		
 	}
 
 	private void setComperator(Comparator<String> comparator) {
@@ -241,26 +263,27 @@ public class Store implements Store_Interface {
 	}
 
 	public int removeProduct(String catalogNumber) {
+		if(numOfProducts==0)
+			return 0;
 		productsMap.remove(catalogNumber);
-		findProductInFile(catalogNumber);
-		it.remove();
+		removeProductFromFile(catalogNumber);
+		numOfProducts--;
 		return 1;
 
 		/*
-		 * Removing specific product Need to also remove from file with File Iterator.
+		 * Removing specific product ,and also from file with File Iterator.
 		 */
 
 	}
 
-	public int getNumOfProducts() {
-		return numOfProducts;
+	private void removeProductFromFile(String catalogNumber) {
+		findProductInFile(catalogNumber);
+		it.remove();
+		
 	}
 
-	public void setUpdateState() {
-		String[] observers = null;
-		update.setState("new status", observers);
-		// create here new inner class that extends runnable (thread) and implements the
-		// last part of the project
+	public int getNumOfProducts() {
+		return numOfProducts;
 	}
 
 	public Map<String, Product> getMap() {
@@ -272,8 +295,13 @@ public class Store implements Store_Interface {
 		 * Remove all products from map and binary file with the iterator, if there are
 		 * no products to remove, return 0, if all removed return 1.
 		 */
-		for(Entry<String, Product> e :  productsMap.entrySet()) {
-			removeProduct(e.getKey());
+		if(numOfProducts==0)
+			return 0;
+		for(Iterator<Entry<String, Product>> it = productsMap.entrySet().iterator(); it.hasNext(); ) {
+		    Entry<String, Product> entry = it.next();
+		        it.remove();
+		        removeProductFromFile(entry.getKey());
+		    System.out.println(entry.getKey() + " " + entry.getValue());
 		}
 		return 1;
 	}
@@ -282,10 +310,16 @@ public class Store implements Store_Interface {
 	public void registerListener(StoreController controller) {
 		allListener.add(controller);
 	}
-
-	public int sendMassages(String massage) {
-
-		// Return 0 if there are no clients that are ineterested in updates.
-		return 0;
+	public StoreUpdates getStoreUpdates()
+	{
+		return updates;
+	}
+	public String[] getCustomersNames()
+	{
+		return customersNames;
+	}
+	public void setCustomersNames(String[] customersNames) {
+		this.customersNames= customersNames;
+		
 	}
 }

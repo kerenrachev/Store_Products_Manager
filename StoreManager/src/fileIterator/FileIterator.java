@@ -60,7 +60,6 @@ public class FileIterator {
 				last = current;
 				current += singleEntitySize;	
 				return entry;
- 
 			}
 			catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -74,8 +73,6 @@ public class FileIterator {
 			if (last == -1)
 				throw new IllegalStateException();
 
-				
-			
 			try {
 				if(size<=singleEntitySize) {
 					raf.setLength(0);

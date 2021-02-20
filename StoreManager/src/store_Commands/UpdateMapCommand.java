@@ -12,9 +12,6 @@ public class UpdateMapCommand implements Command<Object> {
 		this.store = store;
 		this.mapType = mapType;
 	}
-
-
-
 	@Override
 	public Object execute() {
 		store.updateMapType(mapType);

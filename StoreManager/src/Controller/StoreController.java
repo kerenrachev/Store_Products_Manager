@@ -1,5 +1,6 @@
 package Controller;
 
+import java.util.ArrayList;
 import java.util.Map;
 
 import Model.Product;
@@ -50,14 +51,11 @@ public class StoreController implements StoreModelListener, StoreUIListener {
 			theView.OpenErrorStage(l);
 		}
 	}
-
-
 	@Override
 	public void fireSearchForCatalogeNumber(String strCatalogNumber) {
 		theView.setFindedProduct(new FindProductCommand(theModel, strCatalogNumber).execute());
 
 	}
-
 	@Override
 	public void fireRemoveProductByCatalogeNumber(String catalogNumber) {
 		int res = new RemoveProductCommand(theModel, catalogNumber).execute();
@@ -67,6 +65,7 @@ public class StoreController implements StoreModelListener, StoreUIListener {
 
 	@Override
 	public void fireUpdateMapType(int mapType) {
+		System.out.println(mapType);
 		new UpdateMapCommand(theModel, mapType).execute();
 	}
 
@@ -76,7 +75,7 @@ public class StoreController implements StoreModelListener, StoreUIListener {
 	}
 
 	@Override
-	public void fireAddProduct(String catalogNumber, Product p) {
+	public void fireAddProduct(String catalogNumber, Product p,boolean determineTimeStamp) {
 		new AddProductCommand(theModel, catalogNumber, p).execute();
 	}
 
@@ -94,10 +93,22 @@ public class StoreController implements StoreModelListener, StoreUIListener {
 	public int removeAllProducts() {
 		return new RemoveAllProductsCommand(theModel).execute();
 	}
-
 	@Override
 	public int fireSendUpdateMassages(String massage) {
-		return new SendMassagesCommand(theModel,massage).execute();
+		return new SendMassagesCommand(theModel,massage, this).execute();
+	}
+	public void startThreadByRequest(String[] customersNames) {
+		theModel.setCustomersNames(customersNames);
+		
+	}
+	@Override
+	public void fireShowAllCustomersWhoRecievedMSG() {
+		theModel.getStoreUpdates().showCustomerNames(theModel.getCustomersNames(),this);
+		
+	}
+	public void fireLabel(String string) {
+		theView.addNameCustomerToPane(string);
+		
 	}
 
 }

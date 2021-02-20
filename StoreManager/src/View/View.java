@@ -1,6 +1,8 @@
 package View;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -12,6 +14,7 @@ import Model.TableRows;
 import interfaces.StoreModelListener;
 import interfaces.StoreUIListener;
 import interfaces.Store_viewable;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -25,6 +28,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.ToolBar;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
@@ -72,14 +76,18 @@ public class View implements Store_viewable{
 	private Button removeProduct;
 	private ToggleGroup tg;
 	private Background buttondBackground;
+	private String strCatalogNumber;
 
 	private Set<StoreUIListener> allListeners;
 	private StoreModelListener modelListener;
 	public View(Stage primaryStage) {
+		ToolBar tb = new ToolBar();
 		allListeners = new HashSet<StoreUIListener>();
-
-		
 		BorderPane bPane = new BorderPane();
+		bPane.setStyle("-fx-background-image: url(\"/images/background2.jpg\");-fx-background-size: 1200, 900;-fx-background-repeat: no-repeat;");
+		Scene scene = new Scene(bPane, 900, 700);
+		
+
 		Background background = new Background(new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY));
 		buttondBackground = new Background(
 				new BackgroundFill(Color.CORNFLOWERBLUE, CornerRadii.EMPTY, Insets.EMPTY));
@@ -87,37 +95,40 @@ public class View implements Store_viewable{
 				new BackgroundFill(Color.LIGHTSTEELBLUE, CornerRadii.EMPTY, Insets.EMPTY));
 		bPane.setBackground(background);
 		insLabel = new Label("Welcome to the store manager!");
+		insLabel.setStyle("-fx-font: 30 Impact;");
 		mainLabel = new Label("Please choose your action from the navigator above.");
-
+		mainLabel.setStyle("-fx-font: 20 Impact;");
 		insLabel.setAlignment(Pos.CENTER);
-		insLabel.setFont(Font.font("Tahoma", 40));
 
 		mainLabel.setAlignment(Pos.CENTER);
-		mainLabel.setFont(Font.font("Tahoma", 20));
 
 		// Navigator Buttons
-		bSearch = new Button("Search for a produt");
+		bSearch = new Button("Find product");
 		bSearch.setPrefSize(200, 40);
+		bSearch.setStyle("-fx-font: 20 Impact;-fx-base: #ed1c24;");
 		bSearch.setBackground(navButtonsBackground);
-		bSort = new Button("Sort the produts");
+		bSort = new Button("Sort products");
+		bSort.setStyle("-fx-font: 20 Impact;-fx-base: #ed1c24;");
 		bSort.setPrefSize(200, 40);
 		bSort.setBackground(navButtonsBackground);
-		bAddProduct = new Button("Add a produt");
+		bAddProduct = new Button("Add a product");
+		bAddProduct.setStyle("-fx-font: 20 Impact;-fx-base: #ed1c24;");
 		bAddProduct.setPrefSize(200, 40);
 		bAddProduct.setBackground(navButtonsBackground);
-		bShowAll = new Button("Manage all products");
+		bShowAll = new Button("Manage all");
+		bShowAll.setStyle("-fx-font: 20 Impact;-fx-base: #ed1c24;");
 		bShowAll.setPrefSize(200, 40);
 		bShowAll.setBackground(navButtonsBackground);
-
+		sendUpdateMassages= new Button ("Send massages");
+		sendUpdateMassages.setPrefSize(200, 40);
+		sendUpdateMassages.setBackground(navButtonsBackground);
+		sendUpdateMassages.setStyle("-fx-font: 20 Impact;-fx-base: #ed1c24;");
 		// Navigator with the buttons
 		HBox navBox = new HBox();
 		navBox.setPadding(new Insets(35, 12, 15, 12));
 		navBox.setSpacing(20);
 		bPane.setTop(navBox);
-		sendUpdateMassages= new Button ("Send massages");
-		sendUpdateMassages.setPrefSize(200, 40);
-		sendUpdateMassages.setBackground(navButtonsBackground);
-		navBox.getChildren().addAll(bSearch, bSort, bAddProduct, bShowAll,sendUpdateMassages);
+		navBox.getChildren().addAll( bSearch, bSort, bAddProduct, bShowAll,sendUpdateMassages);
 
 		// Right
 		VBox rightBox = new VBox();
@@ -138,24 +149,30 @@ public class View implements Store_viewable{
 		centerBox.setAlignment(Pos.CENTER);
 		centerBox.getChildren().addAll(insLabel, mainLabel);
 
+		
 		// ********* Components for searching after a product ********
 		catalogNumber = new TextField();
 		catalogNumber.setPrefSize(200, 60);
-		ins1 = new Label("Please insert the catalog number of the product : ");
-		ins1.setFont(Font.font("Tahoma", 25));
+		ins1 = new Label("Please insert catalog number");
+		ins1.setStyle("-fx-font: 30 Impact;");
 		searchButtonByCatalogNumber = new Button("Search");
+		searchButtonByCatalogNumber.setStyle("-fx-font: 20 Impact;-fx-base: #0068d6;");
 		searchButtonByCatalogNumber.setBackground(buttondBackground);
 		searchButtonByCatalogNumber.setPrefSize(300, 50);
 		centerBox.getChildren().addAll(ins1, catalogNumber, searchButtonByCatalogNumber);
 
 		// *********Components for sorting a product*********
 
-		ins2 = new Label("Please choose in which way you would want to sort the products");
+		ins2 = new Label("Please choose the sort type");
+		ins2.setStyle("-fx-font: 25 Impact;");
 		ins2.setFont(Font.font("Tahoma", 20));
 		tg = new ToggleGroup();
 		r1 = new RadioButton("Sort by catalog number in ascending order");
+		r1.setStyle("-fx-font: 22 Impact;");
 		r2 = new RadioButton("Sort by catalog number in descending order");
+		r2.setStyle("-fx-font: 22 Impact;");
 		r3 = new RadioButton("Sort by the inserting of the products order.");
+		r3.setStyle("-fx-font: 22 Impact;");
 		r1.setFont(Font.font("Tahoma", 20));
 		r1.setToggleGroup(tg);
 		r2.setFont(Font.font("Tahoma", 20));
@@ -165,11 +182,11 @@ public class View implements Store_viewable{
 		r1.setSelected(true);
 		sortButton = new Button("Sort");
 		sortButton.setPrefSize(300, 50);
-		sortButton.setBackground(buttondBackground);
+		sortButton.setStyle("-fx-font: 20 Impact;-fx-base: #0068d6;");
 		centerBox.getChildren().addAll(ins2, r1, r2, r3, sortButton);
 
 		// *********Components for adding a product*********
-		ins3 = new Label("Please fill in the following details (You must at least fill the catalog number)");
+		ins3 = new Label("       Please fill in the following details \n(You must at least fill the catalog number)");
 		ins4 = new Label("Catalog namber:");
 		catalog = new TextField();
 		catalog.setPrefWidth(10);
@@ -187,7 +204,7 @@ public class View implements Store_viewable{
 		add = new Button("Add");
 		centerBox.getChildren().addAll(ins3, ins4, catalog, ins5, productName, ins6, storeCost, ins7, sellingCost, ins8,
 				customerName, ins9, CustomerPhone, r4, add);
-		add.setBackground(buttondBackground);
+		add.setStyle("-fx-font: 20 Impact;-fx-base: #0068d6;");
 		add.setPrefSize(300, 50);
 		ins3.setFont(Font.font("Tahoma", 17));
 		ins4.setFont(Font.font("Tahoma", 17));
@@ -197,7 +214,14 @@ public class View implements Store_viewable{
 		ins8.setFont(Font.font("Tahoma", 17));
 		ins9.setFont(Font.font("Tahoma", 17));
 		r4.setFont(Font.font("Tahoma", 18));
-
+		ins3.setStyle("-fx-font: 20 Impact;");
+		ins4.setStyle("-fx-font: 17 Impact;");
+		ins5.setStyle("-fx-font: 17 Impact;");
+		ins6.setStyle("-fx-font: 17 Impact;");
+		ins7.setStyle("-fx-font: 17 Impact;");
+		ins8.setStyle("-fx-font: 17 Impact;");
+		ins9.setStyle("-fx-font: 17 Impact;");
+		r4.setStyle("-fx-font: 17 Impact;");
 		
 		bSearch.setOnAction((ActionEvent event) -> {
 			// set the view frame
@@ -211,40 +235,17 @@ public class View implements Store_viewable{
 					return;
 				}
 				
-				String strCatalogNumber = catalogNumber.getText().toString();
+				strCatalogNumber = catalogNumber.getText().toString();
 				for(StoreUIListener listener : allListeners)
 					listener.fireSearchForCatalogeNumber(strCatalogNumber);
-				
-				removeProduct.setOnAction((ActionEvent event3) -> {
-					for(StoreUIListener listener : allListeners)
-						listener.fireRemoveProductByCatalogeNumber(strCatalogNumber);
-				});
 			});
 		});
-		
-		
-		tg.selectedToggleProperty().addListener((obserableValue, old_toggle, new_toggle) -> {
-			int mapType=0;
-		    if (r1.isSelected()) {
-		    	mapType=1;
-		    }
-		    else if (r2.isSelected()) {
-		    	mapType=2;
-		    }
-		    else  {
-		    	mapType=3;
-		    }
-		    for(StoreUIListener listener : allListeners)
-				listener.fireUpdateMapType(mapType);
-		});    
-		
 		
 
 		sendUpdateMassages.setOnAction((ActionEvent event) -> {
 
 			int res=0;
 			 for(StoreUIListener listener : allListeners)
-				 // need to fix and get the massage form the gui
 					res = listener.fireSendUpdateMassages("Massage");
 			if(res==0)
 			{
@@ -257,7 +258,7 @@ public class View implements Store_viewable{
 			{
 				Label l = new Label("Massages has been sent!");
 				l.setTextFill(Color.GREEN);
-				OpenErrorStage(l);
+				openMassagesReplyStage();
 				return;
 			}
 		});
@@ -281,6 +282,18 @@ public class View implements Store_viewable{
 			sortButton.setVisible(true);
 			sortButton.setManaged(true);
 			sortButton.setOnAction((ActionEvent event2) -> {
+				int mapType=0;
+			    if (r1.isSelected()) {
+			    	mapType=0;
+			    }
+			    else if (r2.isSelected()) {
+			    	mapType=1;
+			    }
+			    else  {
+			    	mapType=2;
+			    }
+			    for(StoreUIListener listener : allListeners)
+					listener.fireUpdateMapType(mapType);
 				Label l = new Label("Sort type has been selected.");
 				l.setTextFill(Color.GREEN);
 				OpenErrorStage(l);
@@ -346,11 +359,11 @@ public class View implements Store_viewable{
 					return;
 				}
 				String productNameString = productName.getText().toString();
-				int costPrice = 0, sellingPrice = 0;
+				double costPrice = 0, sellingPrice = 0;
 				if (!storeCost.getText().toString().isEmpty()) {
 					try {
-						costPrice = Integer.parseInt(storeCost.getText().toString());
-						sellingPrice = Integer.parseInt(sellingCost.getText().toString());
+						costPrice = Double.parseDouble(storeCost.getText().toString());
+						sellingPrice= Double.parseDouble(sellingCost.getText().toString());
 
 					} catch (Exception ex) {
 						Label l = new Label("Prices needs to be positive namber ! ");
@@ -361,7 +374,7 @@ public class View implements Store_viewable{
 				}
 				if (!sellingCost.getText().toString().isEmpty()) {
 					try {
-						sellingPrice = Integer.parseInt(sellingCost.getText().toString());
+						sellingPrice =  Double.parseDouble(sellingCost.getText().toString());
 					} catch (Exception ex) {
 						Label l = new Label("You cant put a string in a selling price field");
 						l.setTextFill(Color.RED);
@@ -375,9 +388,11 @@ public class View implements Store_viewable{
 				if (r4.isSelected())
 					clientInterested = true;
 				Customer c = new Customer(clientName, phoneNum, clientInterested);
-				Product p = new Product(productNameString, costPrice, sellingPrice, c);
+				Date addingTime = Calendar.getInstance().getTime();
+				long epochTime = addingTime.getTime();
+				Product p = new Product(productNameString, costPrice, sellingPrice, c, epochTime);
 				 for(StoreUIListener listener : allListeners)
-						listener.fireAddProduct(catalogNumber, p);
+						listener.fireAddProduct(catalogNumber, p,true);
 				Label l = new Label("Product added sucsessfuly !");
 				l.setTextFill(Color.GREEN);
 				Button button = new Button ("Cancel");
@@ -440,7 +455,9 @@ public class View implements Store_viewable{
 			
 			ObservableList<TableRows> data = FXCollections.observableArrayList();
 		    tableView.getColumns().addAll(c1,c2,c3,c4,c8,c5,c6,c7);
-		    VBox vbox = new VBox(tableView);
+		    Label title = new Label ("PRODUCTS LIST");
+			title.setStyle("-fx-font: 50 Impact;");
+		    VBox vbox = new VBox(title,tableView);
 			ArrayList <TableRows> array = new ArrayList<>();
 			Iterator<String> itr = modelListener.getMap().keySet().iterator();
 			TableRows t;
@@ -452,9 +469,9 @@ public class View implements Store_viewable{
 	        	data.add(t);
 	        }
 	        tableView.setItems(data);
-		    Button removeAll = new Button("Delete all products.");
+		    Button removeAll = new Button("Delete all products");
 		    removeAll.setPrefSize(200, 50);
-		    removeAll.setBackground(new Background(new BackgroundFill(Color.INDIANRED, CornerRadii.EMPTY, Insets.EMPTY)));
+		    removeAll.setStyle("-fx-font: 20 Impact;-fx-base: #ed1c24;");
 		    vbox.getChildren().add(removeAll);
 		    vbox.setAlignment(Pos.CENTER);
 		    vbox.setSpacing(30);
@@ -481,7 +498,7 @@ public class View implements Store_viewable{
 
 
 	    clearAll();
-		primaryStage.setScene(new Scene(bPane, 900, 700));
+		primaryStage.setScene(scene);
 		primaryStage.show();
 
 	}
@@ -546,8 +563,14 @@ public class View implements Store_viewable{
 	public Stage OpenErrorStage(Label l) {
 		Stage errorStage= new Stage();
 		StackPane pane= new StackPane();
+		Background b = new Background(
+				new BackgroundFill(Color.WHITE, CornerRadii.EMPTY, Insets.EMPTY));
+		pane.setBackground(b);
+		l.setStyle("-fx-font: 20 Impact;");
 		pane.getChildren().addAll(l);
-		errorStage.setScene(new Scene(pane, 400,200));		
+		Scene s = new Scene(pane,600,300);
+		
+		errorStage.setScene(s);		
 		errorStage.show();
 		return errorStage;
 	}
@@ -560,6 +583,10 @@ public class View implements Store_viewable{
 		removeProduct= new Button("Remove");
 		removeProduct.setPrefSize(200, 40);
 		removeProduct.setBackground(buttondBackground);
+		removeProduct.setOnAction((ActionEvent event3) -> {
+			for(StoreUIListener listener : allListeners)
+				listener.fireRemoveProductByCatalogeNumber(strCatalogNumber);
+		});
 		pane.getChildren().addAll(l,pName,cost,sell,customerName2,profit,phone, interested,removeProduct);
 		productStage.setScene(new Scene(pane, 400,500));		
 		productStage.show();
@@ -570,8 +597,11 @@ public class View implements Store_viewable{
 	public Stage OpenAddingFile(Label l, Button b) {
 		Stage errorStage= new Stage();
 		VBox pane= new VBox();
+		l.setStyle("-fx-font: 22 Impact;");
+		b.setStyle("-fx-font: 20 Impact;-fx-base: #d66400;");
 		pane.getChildren().addAll(l,b);
 		pane.setSpacing(10);
+		pane.setAlignment(Pos.CENTER);
 		errorStage.setScene(new Scene(pane, 400,200));		
 		errorStage.show();
 		return errorStage;
@@ -579,8 +609,11 @@ public class View implements Store_viewable{
 	}
 
 	public Stage openProductsList(VBox vBox) {
+		
 	    Stage products = new Stage();
-		products.setScene(new Scene(vBox, 1250,800));		
+	    Scene scene = new Scene(vBox, 1250,800);
+	    vBox.setStyle("-fx-background-image: url(\"/images/background2.jpg\");-fx-background-size: 1500, 1500;-fx-background-repeat: no-repeat;");
+		products.setScene(scene);		
 		products.show();
 		return products;
 	}
@@ -599,22 +632,30 @@ public class View implements Store_viewable{
 			OpenErrorStage(l);
 			return;
 		}
-		Label l = new Label("Product has been found:");
+		Label l = new Label("Product has been found");
+		l.setStyle("-fx-font: 30 Impact;");
 		l.setTextFill(Color.GREEN);
 		Label pName = new Label();
 		pName.setText("Product name: " + p.getProductName());
+		pName.setStyle("-fx-font: 17 Impact;");
 		Label cost = new Label();
 		cost.setText("The cost for store: " + p.getStoreCostPrice());
+		cost.setStyle("-fx-font: 17 Impact;");
 		Label sell = new Label();
 		sell.setText("The selling price to customer: " + p.getSellingPrice());
+		sell.setStyle("-fx-font: 17 Impact;");
 		Label customerName = new Label();
 		customerName.setText("Customer's name: " + p.getCustomer().getName());
+		customerName.setStyle("-fx-font: 17 Impact;");
 		Label customerPhone = new Label();
 		customerPhone.setText("Customer's phone: " + p.getCustomer().getPhoneNum());
+		customerPhone.setStyle("-fx-font: 17 Impact;");
 		Label isInterested = new Label();
 		isInterested.setText("Wants updates about discount " + p.getCustomer().isWantsUpdates());
+		isInterested.setStyle("-fx-font: 17 Impact;");
 		Label profit = new Label();
 		profit.setText("Clean profit is : " + (p.getSellingPrice() - p.getStoreCostPrice()));
+		profit.setStyle("-fx-font: 17 Impact;");
 		Stage s=OpenProductDetailsStage(l, pName, cost, sell, customerName, customerPhone, isInterested, profit);
 		catalogNumber.clear();		
 	}
@@ -650,8 +691,42 @@ public class View implements Store_viewable{
 			OpenErrorStage(l2);
 			break;
 		}
-			
-		
+	}
+	VBox paneForLabelMassages;
+	public void openMassagesReplyStage()
+	{
+		int answer = 0 ;
+		Label l = new Label ("Do you want to see who saw the MSG?");
+		l.setStyle("-fx-font: 20 Impact;");
+		Button yes= new Button ("yes");
+		yes.setStyle("-fx-font: 20 Impact;-fx-base: #49ff38;");
+		Button no = new Button ("no");
+		no.setStyle("-fx-font: 20 Impact;-fx-base: #ff1414;");
+		yes.setLayoutX(10);
+		no.setLayoutY(50);
+		yes.setOnAction((ActionEvent event) -> {
+			for(StoreUIListener listener : allListeners)
+				listener.fireShowAllCustomersWhoRecievedMSG();
+		});
+		Stage errorStage= new Stage();
+		paneForLabelMassages= new VBox();
+		paneForLabelMassages.getChildren().addAll(l,yes,no);
+		paneForLabelMassages.setAlignment(Pos.TOP_CENTER);
+		paneForLabelMassages.setSpacing(20);
+		errorStage.setScene(new Scene(paneForLabelMassages, 400,600));		
+		errorStage.show();
+		no.setOnAction((ActionEvent event) -> {
+			errorStage.close();
+		});
+	}
+	public void addNameCustomerToPane(String name)
+	{
+		Label l = new Label(name.toString());
+		l.setStyle("-fx-font: 20 Impact;");
+		Platform.runLater(
+		() -> {
+			 paneForLabelMassages.getChildren().add(l);
+		});
 	}
 
 }

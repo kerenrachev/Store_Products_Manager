@@ -32,9 +32,6 @@ public class Customer extends Observer implements Serializable {
 		this.wantsUpdates=wantsUpdates;
 	}
 
-	public String getName() {
-		return name;
-	}
 	public String getPhoneNum() {
 		return phoneNum;
 	}
@@ -64,8 +61,12 @@ public class Customer extends Observer implements Serializable {
 	}
 
 	@Override
-	public String update() {
-		return this.name + "get the message";		
+	protected String replyToMSG() {
+		return this.name ;
+	}
+
+	public String getName() {
+		return this.name;
 	}
 
 	

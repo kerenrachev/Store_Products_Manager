@@ -14,9 +14,11 @@ public interface StoreUIListener {
 
 	int firereadProductsFromBinaryFile(String F_NAME);
 
-	void fireAddProduct(String catalogNumber, Product p);
+	void fireAddProduct(String catalogNumber, Product p,boolean determineTimeStamp);
 
 	int fireremoveLastProduct();
 
 	int fireSendUpdateMassages(String massage);
+
+	void fireShowAllCustomersWhoRecievedMSG();
 }
