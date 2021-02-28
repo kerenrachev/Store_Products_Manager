@@ -14,8 +14,8 @@ public class Customer extends Observer implements Serializable {
 	 * 
 	 */
 	
-	private final static int NAME_SIZE = 50;
-	private final static int PHONE_SIZE = 10;
+	public final static int NAME_SIZE = 50;
+	public final static int PHONE_SIZE = 10;
 
 	private static final long serialVersionUID = 1L;
 	public static final int CUSTOMER_SIZE = (NAME_SIZE*2) + (PHONE_SIZE*2) + 1;

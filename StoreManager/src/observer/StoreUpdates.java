@@ -39,8 +39,14 @@ public class StoreUpdates extends Thread{
 		this.state = state;
 		observers = notifyAllObservers();
 	}
-
+	
+	/*Check if the phone number of the new customer already exists. If so - don't add to updateList.*/
 	public void attach(Observer observer) {
+		for( Observer o : customerList)
+		{
+			if(((Customer)o).getPhoneNum().equalsIgnoreCase(((Customer)observer).getPhoneNum()))
+				return;	
+		}
 		customerList.add(observer);
 	}
 

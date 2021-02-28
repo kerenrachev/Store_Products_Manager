@@ -4,7 +4,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -84,8 +83,6 @@ public class Store implements Store_Interface {
 			if(rafIn.length()==0)
 				return 0;
 			int size = (int) (rafIn.length() / (PRODUCT_KEY_SIZE + Product.PRODUCT_SIZE));
-			// System.out.println("rafIn.length = " + rafIn.length() + "size = " + size + "
-			// --- " + (PRODUCT_KEY_SIZE + Product.PRODUCT_SIZE));
 			for (int i = 0; i < size; i++) {
 				numOfProducts++;
 				String k = File_IO.readFixedString(PRODUCT_KEY_SIZE, rafIn);
@@ -220,7 +217,6 @@ public class Store implements Store_Interface {
 			reWriteBinaryFileAndMapWithSortedProducts(productsMapTemp);
 			//LinkedHashMap<String , Product> newMap = new LinkedHashMap<String, Product>();
 			productsMap=  new LinkedHashMap<String, Product>(productsMap);
-			System.out.println("WOOOOOOOOOOORKSSSSSSSSSSSSSSSSSSS");
 			break;
 
 		default:
@@ -255,9 +251,7 @@ public class Store implements Store_Interface {
 			Map.Entry<String, Product> e = it.next();
 			if (e.getKey().equalsIgnoreCase(catalogNumber))
 				return e.getValue();
-
 		}
-
 		return null;
 
 	}
@@ -279,7 +273,6 @@ public class Store implements Store_Interface {
 	private void removeProductFromFile(String catalogNumber) {
 		findProductInFile(catalogNumber);
 		it.remove();
-		
 	}
 
 	public int getNumOfProducts() {

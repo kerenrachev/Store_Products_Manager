@@ -39,16 +39,7 @@ public class File_IO {
 		}
 		in.skipBytes(2 * (size - i));
 		return b.toString();
-//		byte[] buff = new byte[size];
-//		in.readFully(buff);
-//		
-//		return buff.toString();
-//		byte[] tempId = new byte[size];
-//		in.readFully(tempId);
-//		String readed =  new String(tempId);
-//		return readed;
-
-		
+	
 	}
 
 	public static Object getObject(byte[] byteArr) throws IOException, ClassNotFoundException {

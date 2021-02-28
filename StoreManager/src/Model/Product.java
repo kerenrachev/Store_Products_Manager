@@ -17,7 +17,7 @@ public class Product implements Serializable{
 	 */
 	private static final long serialVersionUID = 1L;
 	
-	private final static int NAME_SIZE = 50;
+	public final static int NAME_SIZE = 50;
 	public static final int PRODUCT_SIZE = (NAME_SIZE*2) + Customer.CUSTOMER_SIZE + 8 + 8 + 8 ; // 8 bytes for each price + 8 byte for long
 	
 	private String productName;

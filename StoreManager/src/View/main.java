@@ -43,10 +43,7 @@ public class main extends Application{
 	public void start(Stage primaryStage) throws Exception {
 		
 	    View view = new View(primaryStage);
-	    // Here we will have to read the binary file with the products and insert into store
 	    Store model = new Store ();
-	    
-	    
 	    StoreController controller= new StoreController(model,view);
 		
 	}

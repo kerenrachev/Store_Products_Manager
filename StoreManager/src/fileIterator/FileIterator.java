@@ -81,14 +81,15 @@ public class FileIterator {
 					return;
 				}
 				while(hasNext()) {
-					int pos = last+=singleEntitySize;
+					int pos = last;
 					raf.seek(current);
 					String k = File_IO.readFixedString(Store.PRODUCT_KEY_SIZE, raf);
 					Product p = Product.readProductToFile(raf);
 					raf.seek(pos);
 					File_IO.writeFixedString(k,Store.PRODUCT_KEY_SIZE, raf);
 					p.writeProductToFile(raf);
-					current = (int) raf.getFilePointer();
+					last+= singleEntitySize;
+					current +=singleEntitySize;
 					
 				}
 				raf.setLength(size - singleEntitySize);
