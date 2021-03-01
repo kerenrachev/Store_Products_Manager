@@ -3,6 +3,7 @@ package Controller;
 import java.util.ArrayList;
 import java.util.Map;
 
+import Model.Customer;
 import Model.Product;
 import Model.Store;
 import View.View;
@@ -10,7 +11,8 @@ import interfaces.StoreModelListener;
 import interfaces.StoreUIListener;
 import javafx.scene.control.Label;
 import javafx.scene.paint.Color;
-import store_Commands.AddProductCommand;
+import store_Commands.AddProductCommandToFile;
+import store_Commands.AddProductCommandToMap;
 import store_Commands.FindProductCommand;
 import store_Commands.GetMapCommand;
 import store_Commands.ReadProductsFromBinaryFileCommand;
@@ -75,9 +77,10 @@ public class StoreController implements StoreModelListener, StoreUIListener {
 	}
 
 	@Override
-	public void fireAddProduct(String catalogNumber, Product p,boolean determineTimeStamp) {
-		new AddProductCommand(theModel, catalogNumber, p).execute();
+	public void fireAddProductToFile() {
+		new AddProductCommandToFile(theModel).execute();
 	}
+
 
 	@Override
 	public int fireremoveLastProduct() {
@@ -108,6 +111,17 @@ public class StoreController implements StoreModelListener, StoreUIListener {
 	}
 	public void fireLabel(String string) {
 		theView.addNameCustomerToPane(string);
+		
+	}
+	@Override
+	public void fireAddProductToMap(String clientName, String phoneNum, boolean clientInterested,
+			String productNameString, double costPrice, double sellingPrice,long epochTime,String catalogNum) {
+
+		
+		new AddProductCommandToMap(theModel, catalogNum, new Product(productNameString,
+																		costPrice, sellingPrice,
+																		new Customer(clientName, phoneNum, clientInterested), epochTime))
+																		.execute();
 		
 	}
 

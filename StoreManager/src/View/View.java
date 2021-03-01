@@ -40,6 +40,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 public class View implements Store_viewable{
@@ -74,6 +75,7 @@ public class View implements Store_viewable{
 	private Label insLabel;
 	private TextField catalogNumber;
 	private Button searchButtonByCatalogNumber;
+	private Button Ok;
 	private RadioButton r1;
 	private RadioButton r2;
 	private RadioButton r3;
@@ -332,20 +334,24 @@ public class View implements Store_viewable{
 						return;
 					}
 				}
-				Customer c = new Customer(clientName, phoneNum, clientInterested);
 				Date addingTime = Calendar.getInstance().getTime();
 				long epochTime = addingTime.getTime();
-				Product p = new Product(productNameString, costPrice, sellingPrice, c, epochTime);
-				 for(StoreUIListener listener : allListeners)
-						listener.fireAddProduct(catalogNumber, p,true);
 				Label l = new Label("Product added sucsessfuly !");
 				l.setTextFill(Color.GREEN);
-				Button button = new Button ("Cancel");
-				button.setPrefSize(100, 30);
+				Button cancel = new Button ("Cancel");
+				cancel.setPrefSize(100, 30);
 				Background b= new Background(new BackgroundFill(Color.INDIANRED, CornerRadii.EMPTY, Insets.EMPTY));
-				button.setBackground(b);
-				Stage s2=OpenAddingFile(l,button);
-				button.setOnAction((ActionEvent event3) -> {
+				cancel.setBackground(b);
+				Button Ok = new Button ("Ok");
+				for(StoreUIListener listener : allListeners)
+					listener.fireAddProductToMap(clientName, phoneNum, clientInterested,productNameString, costPrice, sellingPrice, epochTime,catalogNumber);
+				Stage s2=OpenAddingFile(l,cancel,Ok);
+				Ok.setOnAction((ActionEvent event5) -> {
+					for(StoreUIListener listener : allListeners)
+						listener.fireAddProductToFile();
+					 s2.close();
+				});
+				cancel.setOnAction((ActionEvent event3) -> {
 					int res=0;
 					 for(StoreUIListener listener : allListeners)
 							res = listener.fireremoveLastProduct();
@@ -354,6 +360,7 @@ public class View implements Store_viewable{
 						Label ll = new Label("Cant remove this product");
 						ll.setTextFill(Color.RED);
 						OpenErrorStage(ll);
+						s2.close();
 						return;
 					}
 					else
@@ -652,15 +659,19 @@ public class View implements Store_viewable{
 		
 	}
 
-	public Stage OpenAddingFile(Label l, Button b) {
+	public Stage OpenAddingFile(Label l, Button cancel,Button Ok) {
+		boolean readyToContinue = false;
 		Stage errorStage= new Stage();
 		VBox pane= new VBox();
 		l.setStyle("-fx-font: 22 Impact;");
-		b.setStyle("-fx-font: 20 Impact;-fx-base: #d66400;");
-		pane.getChildren().addAll(l,b);
+		cancel.setStyle(BUTTON_STYLE_RED);
+		Ok.setStyle("-fx-font: 20 Impact;-fx-base: #49ff38;");
+		Ok.setPrefSize(100, 40);
+		pane.getChildren().addAll(l,Ok,cancel);
 		pane.setSpacing(10);
 		pane.setAlignment(Pos.CENTER);
-		errorStage.setScene(new Scene(pane, 400,200));		
+		errorStage.setScene(new Scene(pane, 400,200));	
+		errorStage.initModality(Modality.APPLICATION_MODAL);
 		errorStage.show();
 		return errorStage;
 		

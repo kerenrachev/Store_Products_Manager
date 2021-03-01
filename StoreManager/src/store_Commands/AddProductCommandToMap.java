@@ -4,13 +4,13 @@ import Model.Product;
 import Model.Store;
 import interfaces.Command;
 
-public class AddProductCommand implements Command<String>{
+public class AddProductCommandToMap implements Command<String>{
 	
 	private Store store;
 	private String key;
 	private Product product;
 	
-	public AddProductCommand(Store store,String key , Product product)
+	public AddProductCommandToMap(Store store,String key , Product product)
 	{
 		this.store = store;
 		this.key = key;
@@ -19,7 +19,7 @@ public class AddProductCommand implements Command<String>{
 
 	@Override
 	public String execute() {
-		store.addProduct(key, product);
+		store.addProduct(key , product);
 		return key;
 	}
 }

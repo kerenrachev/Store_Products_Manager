@@ -117,9 +117,6 @@ public class Store implements Store_Interface {
 		this.numOfProducts++;
 		if (p.getCustomer().wantsUpdates)
 			updates.attach(p.getCustomer());
-		saveProductsToBinaryFile(F_NAME);
-
-
 	}
 
 	private void startIterationOnFile() throws ProductIdNotFoundException {
@@ -158,7 +155,9 @@ public class Store implements Store_Interface {
 		 * Remove it from both map and binary file.
 		 */
 		if (productsMomento == null)
+		{
 			throw new UnableToRecoveryLastProductException();
+		}
 		productsMap = productsMomento.getProductsMap();
 		productsMomento = null;
 		return 1; // If product has been removed successfully
@@ -231,7 +230,7 @@ public class Store implements Store_Interface {
 		    Entry<String, Product> entry = it.next();
 		    addProduct(entry.getKey(),entry.getValue());
 		}
-		
+		 addProductToFile();
 	}
 
 	private void setComperator(Comparator<String> comparator) {
@@ -267,11 +266,11 @@ public class Store implements Store_Interface {
 		/*
 		 * Removing specific product ,and also from file with File Iterator.
 		 */
-
 	}
 
 	private void removeProductFromFile(String catalogNumber) {
-		findProductInFile(catalogNumber);
+		//findProductInFile(catalogNumber);
+		System.out.println(findProductInFile(catalogNumber));
 		it.remove();
 	}
 
@@ -314,5 +313,10 @@ public class Store implements Store_Interface {
 	public void setCustomersNames(String[] customersNames) {
 		this.customersNames= customersNames;
 		
+	}
+
+	public void addProductToFile() {
+
+		saveProductsToBinaryFile(F_NAME);
 	}
 }
