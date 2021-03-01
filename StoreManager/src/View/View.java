@@ -42,6 +42,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 public class View implements Store_viewable{
 	
@@ -672,6 +673,7 @@ public class View implements Store_viewable{
 		pane.setAlignment(Pos.CENTER);
 		errorStage.setScene(new Scene(pane, 400,200));	
 		errorStage.initModality(Modality.APPLICATION_MODAL);
+		errorStage.initStyle(StageStyle.UNDECORATED);
 		errorStage.show();
 		return errorStage;
 		
