@@ -10,10 +10,6 @@ import observer.Observer;
 
 public class Customer extends Observer implements Serializable {
 
-	/**
-	 * 
-	 */
-	
 	public final static int NAME_SIZE = 50;
 	public final static int PHONE_SIZE = 10;
 
